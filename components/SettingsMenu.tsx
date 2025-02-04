@@ -30,9 +30,12 @@ export default function SettingsMenu() {
 	return (
 		<>
 			{/* Settings Button */}
-			<div onClick={() => setIsOpen(true)} className="flex items-center gap-2 text-customRed cursor-pointer z-20">
-				<Settings className="w-8 h-8" />
-				<span className="text-lg font-medium">Configuración</span>
+			<div
+				onClick={() => setIsOpen(true)}
+				className="flex justify-center items-center w-[4.6rem] h-[4.6rem] text-customRed cursor-pointer z-20 bg-customRed rounded-lg shadow-lg"
+			>
+				<Settings className="w-[3.6rem] h-[3.6rem] text-customWhite bg-customRed" />
+				{/* <span className="text-lg font-medium">Configuración</span> */}
 			</div>
 
 			{/* Overlay */}
