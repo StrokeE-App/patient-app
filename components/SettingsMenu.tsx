@@ -3,6 +3,7 @@
 import {Settings, X} from 'lucide-react';
 import {useState, useEffect} from 'react';
 import {SignOut} from '@/firebase/config';
+import Link from 'next/link';
 
 export default function SettingsMenu() {
 	const [isOpen, setIsOpen] = useState(false);
@@ -52,6 +53,23 @@ export default function SettingsMenu() {
 					<h2 className="text-2xl font-medium">Hola,</h2>
 					<p className="text-2xl font-black">Paciente!</p>
 					<X onClick={() => setIsOpen(false)} className="absolute top-6 right-6 w-6 h-6 cursor-pointer" />
+				</div>
+
+				{/* Panel Content */}
+				<div className="p-6">
+					<ul className="mt-4 space-y-2">
+						<li>
+							<Link href="/edit-profile">
+								<button className="text-2xl font-medium text-gray-900 p-4 w-full text-start hover:text-customRed">Editar perfil</button>
+							</Link>
+						</li>
+						<li>
+							<button className="text-2xl font-medium text-gray-900 p-4 w-full text-start hover:text-customRed">Contactos de emergencia</button>
+						</li>
+						{/* <li>
+							<button className="text-2xl font-medium text-gray-900 hover:text-customRed">Notificaciones</button>
+						</li> */}
+					</ul>
 				</div>
 
 				{/* Panel Footer with Logout Button */}
