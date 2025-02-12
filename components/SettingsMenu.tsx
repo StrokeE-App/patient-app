@@ -64,7 +64,9 @@ export default function SettingsMenu() {
 							</Link>
 						</li>
 						<li>
-							<button className="text-2xl font-medium text-gray-900 p-4 w-full text-start hover:text-customRed">Contactos de emergencia</button>
+							<Link href={`/emergency-contacts`}>
+								<button className="text-2xl font-medium text-gray-900 p-4 w-full text-start hover:text-customRed">Contactos de emergencia</button>
+							</Link>
 						</li>
 						{/* <li>
 							<button className="text-2xl font-medium text-gray-900 hover:text-customRed">Notificaciones</button>
