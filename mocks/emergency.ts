@@ -44,24 +44,28 @@ const emergencyContactsList: EmergencyContact[] = [
 		name: 'Pepito Pérez',
 		phone: '+57 123 456 7890',
 		relationship: 'Padre',
+		email: 'pepito@gmail.com',
 	},
 	{
 		id: 2,
 		name: 'María García Londoño Lopez',
 		phone: '+57 321 654 0987',
 		relationship: 'Madre',
+		email: 'maria@gmail.com',
 	},
 	{
 		id: 3,
 		name: 'Juanito López Hernando',
 		phone: '+57 987 654 3210',
 		relationship: 'Hermano',
+		email: 'juanito@gmail.com',
 	},
 	{
 		id: 4,
 		name: 'Carlos Rodríguez',
 		phone: '+57 311 555 4433',
 		relationship: 'Tío',
+		email: 'carlos@gmail.com',
 	},
 ];
 

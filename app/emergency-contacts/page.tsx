@@ -1,3 +1,6 @@
+'use client';
+
+import {useEffect, useState} from 'react';
 import Link from 'next/link';
 
 // Components
@@ -7,8 +10,21 @@ import {ArrowBigLeft, CirclePlus} from 'lucide-react';
 
 // Mocks
 import {emergencyContactsList} from '@/mocks/emergency';
+import {EmergencyContact} from '@/types';
 
 export default function EmergencyContactsPage() {
+	const [emergencyContacts, setEmergencyContacts] = useState<EmergencyContact[]>([]);
+
+	useEffect(() => {
+		const emergencyContacts = localStorage.getItem('emergencyContacts');
+		if (emergencyContacts) {
+			setEmergencyContacts(JSON.parse(emergencyContacts));
+		} else {
+			setEmergencyContacts(emergencyContactsList);
+			localStorage.setItem('emergencyContacts', JSON.stringify(emergencyContactsList));
+		}
+	}, []);
+
 	return (
 		<>
 			<div className="text-customRed mt-4 ml-4">
@@ -22,7 +38,7 @@ export default function EmergencyContactsPage() {
 			</div>
 
 			<div className="flex flex-col items-center mt-4 p-4 gap-5">
-				{emergencyContactsList.map((contact, index) => (
+				{emergencyContacts.map((contact, index) => (
 					<EmergencyContactCard key={index} name={contact.name} phone={contact.phone} relationship={contact.relationship} />
 				))}
 			</div>

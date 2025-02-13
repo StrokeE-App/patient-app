@@ -16,4 +16,5 @@ export type EmergencyContact = {
 	name: string;
 	phone: string;
 	relationship: string;
+	email: string;
 };
