@@ -39,7 +39,13 @@ export default function EmergencyContactsPage() {
 
 			<div className="flex flex-col items-center mt-4 p-4 gap-5">
 				{emergencyContacts.map((contact, index) => (
-					<EmergencyContactCard key={index} name={contact.name} phone={contact.phone} relationship={contact.relationship} />
+					<EmergencyContactCard
+						key={index}
+						emergencyContactId={contact.id}
+						name={contact.name}
+						phone={contact.phone}
+						relationship={contact.relationship}
+					/>
 				))}
 			</div>
 
