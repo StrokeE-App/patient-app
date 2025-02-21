@@ -6,7 +6,7 @@ import {EmergencyContact} from '@/types';
 import {ArrowBigLeft} from 'lucide-react';
 import Link from 'next/link';
 import {useRouter} from 'next/navigation';
-import {useEffect, useState} from 'react';
+import {useEffect, useState, useMemo} from 'react';
 
 export default function AddEmergencyContactPage() {
 	const router = useRouter();
@@ -15,12 +15,21 @@ export default function AddEmergencyContactPage() {
 	const [relationship, setRelationship] = useState('');
 	const [email, setEmail] = useState('');
 	const [contacts, setContacts] = useState<EmergencyContact[]>([]);
+
+	// Load contacts from localStorage
 	useEffect(() => {
 		const contacts = localStorage.getItem('emergencyContacts');
 		if (contacts) {
 			setContacts(JSON.parse(contacts));
 		}
 	}, []);
+
+	// Disable button if any of the fields are empty
+	const isDisabled = useMemo(() => {
+		return !(name && phone && relationship && email);
+	}, [name, phone, relationship, email]);
+
+	// Add new contact to localStorage and redirect to emergency contacts page
 	const handleAddContact = () => {
 		if (name && phone && relationship && email) {
 			const newContact = {
@@ -49,7 +58,7 @@ export default function AddEmergencyContactPage() {
 					<Input type="text" placeholder="Parentesco" value={relationship} onChange={(e) => setRelationship(e.target.value)} required />
 					<Input type="tel" placeholder="Teléfono" value={phone} onChange={(e) => setPhone(e.target.value)} required />
 					<Input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-					<Button className="rounded-lg bg-customRed !text-customWhite" onClick={handleAddContact}>
+					<Button className="rounded-lg bg-customRed !text-customWhite" disabled={isDisabled} onClick={handleAddContact}>
 						Agregar Contacto
 					</Button>
 				</div>
