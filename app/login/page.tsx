@@ -23,7 +23,7 @@ export default function Login() {
 			{isLoading ? (
 				<div className="w-6 h-6 border-2 border-customRed border-t-transparent rounded-full animate-spin" />
 			) : (
-				<LoginForm placeholder="Correo" />
+				<LoginForm placeholder="Correo " />
 			)}
 		</main>
 	);
