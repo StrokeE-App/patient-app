@@ -21,8 +21,12 @@ export function LoginForm({placeholder = 'Usuario'}: LoginFormProps) {
 		try {
 			await SignIn(username, password);
 			toast.success('¡Bienvenido!', {id: loadingToast});
-		} catch {
-			toast.error('Usuario o contraseña incorrectos', {id: loadingToast});
+		} catch (error) {
+			if (error instanceof Error) {
+				toast.error(error.message, {id: loadingToast});
+			} else {
+				toast.error('Un error inesperado ha ocurrido.', {id: loadingToast});
+			}
 		} finally {
 			setIsLoading(false);
 		}

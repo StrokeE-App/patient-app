@@ -7,23 +7,47 @@ import Link from 'next/link';
 import Button from '@/components/Button';
 import EmergencyContactCard from '@/components/EmergencyContactCard';
 import {ArrowBigLeft, CirclePlus} from 'lucide-react';
+import toast from 'react-hot-toast';
 
 // Mocks
-import {emergencyContactsList} from '@/mocks/emergency';
+// import {emergencyContactsList} from '@/mocks/emergency';
 import {EmergencyContact} from '@/types';
+
+// API
+import apiClient from '@/api/api';
+
+// Context
+import {useAuth} from '@/context/AuthContext';
 
 export default function EmergencyContactsPage() {
 	const [emergencyContacts, setEmergencyContacts] = useState<EmergencyContact[]>([]);
+	const {user} = useAuth();
 
 	useEffect(() => {
-		const emergencyContacts = localStorage.getItem('emergencyContacts');
-		if (emergencyContacts) {
-			setEmergencyContacts(JSON.parse(emergencyContacts));
-		} else {
-			setEmergencyContacts(emergencyContactsList);
-			localStorage.setItem('emergencyContacts', JSON.stringify(emergencyContactsList));
-		}
-	}, []);
+		// const emergencyContacts = localStorage.getItem('emergencyContacts');
+		// if (emergencyContacts) {
+		// 	setEmergencyContacts(JSON.parse(emergencyContacts));
+		// } else {
+		// 	setEmergencyContacts(emergencyContactsList);
+		// 	localStorage.setItem('emergencyContacts', JSON.stringify(emergencyContactsList));
+		// }
+
+		if (!user) return;
+
+		const fetchEmergencyContacts = async () => {
+			const loadingToast = toast.loading('Cargando Contactos de Emergencia...');
+			try {
+				const response = await apiClient.get(`/patient/emergency-contacts/all/${user.uid}`);
+				setEmergencyContacts(response.data.data);
+				toast.success('Contactos de Emergencia cargados.', {id: loadingToast});
+			} catch (error) {
+				toast.error('Error al cargar los Contactos de Emergencia.', {id: loadingToast});
+				console.error(error);
+			}
+		};
+
+		fetchEmergencyContacts();
+	}, [user]);
 
 	return (
 		<>
@@ -41,9 +65,9 @@ export default function EmergencyContactsPage() {
 				{emergencyContacts.map((contact, index) => (
 					<EmergencyContactCard
 						key={index}
-						emergencyContactId={contact.id}
-						name={contact.name}
-						phone={contact.phone}
+						emergencyContactId={contact.emergencyContactId}
+						name={`${contact.firstName} ${contact.lastName}`}
+						phone={contact.phoneNumber}
 						relationship={contact.relationship}
 					/>
 				))}
