@@ -1,60 +1,106 @@
 'use client';
-
-import Button from '@/components/Button';
-import Input from '@/components/Input';
-import {EmergencyContact} from '@/types';
-import {ArrowBigLeft} from 'lucide-react';
+import {useEffect, useState, useMemo} from 'react';
 import Link from 'next/link';
 import {useRouter} from 'next/navigation';
-import {useEffect, useState, useMemo} from 'react';
+
+// Components
+import toast from 'react-hot-toast';
+import {ArrowBigLeft} from 'lucide-react';
+import Button from '@/components/Button';
+import Input from '@/components/Input';
+
+// API
+import apiClient from '@/api/api';
+
+// Context
+import {useAuth} from '@/context/AuthContext';
+
+// Utils
+import {isValidEmail, isValidPhoneNumber} from '@/utils/validations';
 
 export default function EditEmergencyContactPage({params}: {params: Promise<{emercengyContactId: string}>}) {
 	const router = useRouter();
-	const [contactId, setContactId] = useState<number | null>(null);
-	const [name, setName] = useState('');
-	const [phone, setPhone] = useState('');
+	const [contactId, setContactId] = useState<string | null>(null);
+	const [firstName, setFirstName] = useState('');
+	const [lastName, setLastName] = useState('');
+	const [phoneNumber, setPhoneNumber] = useState('');
 	const [relationship, setRelationship] = useState('');
 	const [email, setEmail] = useState('');
-	const [contacts, setContacts] = useState<EmergencyContact[]>([]);
+
+	const {user} = useAuth();
 
 	// Disable button if any of the fields are empty
 	const isDisabled = useMemo(() => {
-		return !(name && phone && relationship && email);
-	}, [name, phone, relationship, email]);
+		return !(firstName && phoneNumber && relationship && email);
+	}, [firstName, phoneNumber, relationship, email]);
 
 	// Unwrap params promise
 	useEffect(() => {
 		async function unwrapParams() {
 			const resolvedParams = await params;
-			setContactId(Number(resolvedParams.emercengyContactId));
+			setContactId(resolvedParams.emercengyContactId);
 		}
 		unwrapParams();
 	}, [params]);
 
-	// Load and pre-fill contact data once contactId is available
+	// Load contact data
 	useEffect(() => {
 		if (contactId === null) return;
-		const storedContacts = localStorage.getItem('emergencyContacts');
-		if (storedContacts) {
-			const parsedContacts: EmergencyContact[] = JSON.parse(storedContacts);
-			setContacts(parsedContacts);
-			const contact = parsedContacts.find((c) => c.id === contactId);
-			if (contact) {
-				setName(contact.name);
-				setPhone(contact.phone);
-				setRelationship(contact.relationship);
-				setEmail(contact.email);
-			}
-		}
-	}, [contactId]);
+		if (!user) return;
 
-	// Edit Contact
-	const handleEditContact = () => {
-		if (contactId !== null && name && phone && relationship && email) {
-			const updatedContacts = contacts.map((contact) => (contact.id === contactId ? {...contact, name, phone, relationship, email} : contact));
-			setContacts(updatedContacts);
-			localStorage.setItem('emergencyContacts', JSON.stringify(updatedContacts));
-			router.push('/emergency-contacts');
+		const getPatientData = async () => {
+			const loadingToast = toast.loading('Cargando Contacto de Emergencia...');
+			try {
+				const response = await apiClient.get(`/patient/emergency-contacts/${user.uid}/${contactId}`);
+				const contactData = response.data.data;
+				setFirstName(contactData.firstName);
+				setLastName(contactData.lastName);
+				setPhoneNumber(contactData.phoneNumber);
+				setRelationship(contactData.relationship);
+				setEmail(contactData.email);
+				toast.success('Contacto de Emergencia cargado.', {id: loadingToast});
+			} catch (error) {
+				toast.error('Error al cargar el Contacto de Emergencia.', {id: loadingToast});
+				console.error(error);
+			}
+		};
+
+		getPatientData();
+	}, [contactId, user]);
+
+	// Edit contact data in the database and redirect to emergency contacts page
+	const handleEditContact = async () => {
+		if (user && contactId && firstName && lastName && phoneNumber && relationship && email) {
+			// Validate phone number format (10 digits)
+			if (!isValidPhoneNumber(phoneNumber)) {
+				toast.error('Número de teléfono inválido.');
+				return;
+			}
+
+			// Validate email format
+			if (!isValidEmail(email)) {
+				toast.error('Email inválido.');
+				return;
+			}
+
+			const loadingToast = toast.loading('Editando Contacto de Emergencia...');
+
+			try {
+				await apiClient.put(`/patient/emergency-contacts/${user.uid}/${contactId}`, {
+					contact: {
+						firstName,
+						lastName,
+						phoneNumber,
+						email,
+						relationship,
+					},
+				});
+				toast.success('Contacto de Emergencia editado.', {id: loadingToast});
+				router.push('/emergency-contacts');
+			} catch (error) {
+				toast.error('Error al editar el Contacto de Emergencia.', {id: loadingToast});
+				console.error(error);
+			}
 		}
 	};
 
@@ -70,12 +116,13 @@ export default function EditEmergencyContactPage({params}: {params: Promise<{eme
 			</div>
 			<div className="flex flex-col items-center justify-center">
 				<h1 className="text-4xl font-bold text-center">Editar Contacto</h1>
-				<form onSubmit={handleEditContact} className="flex flex-col items-center gap-4 mt-8 w-[90vw] max-w-[40rem]">
-					<Input type="text" placeholder="Nombre" value={name} onChange={(e) => setName(e.target.value)} required />
+				<form className="flex flex-col items-center gap-4 mt-8 w-[90vw] max-w-[40rem]">
+					<Input type="text" placeholder="Nombre" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+					<Input type="text" placeholder="Apellido" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
 					<Input type="text" placeholder="Parentesco" value={relationship} onChange={(e) => setRelationship(e.target.value)} required />
-					<Input type="tel" placeholder="Teléfono" value={phone} onChange={(e) => setPhone(e.target.value)} required />
+					<Input type="tel" placeholder="Teléfono" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} required />
 					<Input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-					<Button type="submit" className="rounded-lg bg-customRed !text-customWhite" disabled={isDisabled}>
+					<Button onClick={handleEditContact} className="rounded-lg bg-customRed !text-customWhite" disabled={isDisabled}>
 						Editar Contacto
 					</Button>
 				</form>

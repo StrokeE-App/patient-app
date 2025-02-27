@@ -39,6 +39,8 @@ export default function EmergencyContactCard({
 		}, 2000);
 	};
 
+	console.log(emergencyContactId);
+
 	return (
 		<>
 			<div className="w-[90vw] sm:w-[20vw] min-w-[18rem] flex justify-between items-center mt-4 p-4 bg-customLightGray rounded-lg shadow-sm gap-6">
