@@ -1,13 +1,52 @@
 'use client';
 
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {ArrowBigLeft} from 'lucide-react';
 import Link from 'next/link';
 
 // Components
 import Input from '@/components/Input';
 
+// API
+import apiClient from '@/api/api';
+
+// Context
+import {useAuth} from '@/context/AuthContext';
+
 export default function EditProfilePage() {
+	const [patient, setPatient] = useState({
+		firstName: '',
+		lastName: '',
+		phoneNumber: '',
+		age: 0,
+		birthDate: '',
+		weight: 0,
+		height: 0,
+		medications: '',
+		conditions: '',
+		email: '',
+		password: '',
+	});
+	const {user} = useAuth();
+
+	useEffect(() => {
+		const getPatientData = async () => {
+			if (!user) return;
+
+			try {
+				const response = await apiClient.get(`/patient/${user.uid}`);
+				const patient = response.data.data;
+				setPatient(patient);
+			} catch (error) {
+				console.log(error);
+			}
+		};
+
+		getPatientData();
+	}, [user]);
+
+	if (!user) return null;
+
 	return (
 		<div>
 			<div className="text-customRed mt-4 ml-4">
@@ -21,18 +60,19 @@ export default function EditProfilePage() {
 			</div>
 
 			<div className="flex flex-col items-center mt-4 p-4 gap-5">
-				<Input placeholder="Nombre" disabled={true} value="Pepito" />
-				<Input placeholder="Apellido" disabled={true} value="Pepito" />
-				<Input placeholder="Número celular" disabled={true} value="Pepito" />
-				<Input placeholder="Edad" disabled={true} type="number" value="Pepito" />
-				<Input placeholder="Fecha de Nacimiento" disabled={true} value="02/29/2024" />
-				<Input placeholder="Peso" disabled={true} type="number" value="63" />
-				<Input placeholder="Estatura" disabled={true} type="number" value="170" />
-				<Input placeholder="Medicamentos" disabled={true} value="dolex" />
-				<Input placeholder="Condiciones" disabled={true} value="gripa, dolor de cabeza" />
-
-				<Input placeholder="Email" disabled={true} value="Pérez" />
-				<Input placeholder="Contraseña" disabled={true} value="prueba123" type="password" />
+				<Input name="firstName" placeholder="Nombre" value={patient.firstName} withLabel />
+				<Input placeholder="Apellido" value={patient.lastName} />
+				<Input placeholder="Número celular" value={patient.phoneNumber} />
+				<Input placeholder="Edad" type="number" value={patient.age} />
+				<Input placeholder="Fecha de Nacimiento" value={patient.birthDate} />
+				<Input placeholder="Peso" type="number" value={patient.weight} />
+				<Input placeholder="Estatura" type="number" value={patient.height} />
+				<Input placeholder="Medicamentos" value={patient.medications} />
+				<Input placeholder="Condiciones" value={patient.conditions} />
+				<br />
+				<br />
+				<Input placeholder="Email" disabled={true} value={user.email || ''} />
+				<Input placeholder="Nueva Contraseña" disabled={true} value="" type="password" />
 			</div>
 
 			<div className="flex justify-center mt-8">
