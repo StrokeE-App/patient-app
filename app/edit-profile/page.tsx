@@ -22,10 +22,17 @@ export default function EditProfilePage() {
 
 			<div className="flex flex-col items-center mt-4 p-4 gap-5">
 				<Input placeholder="Nombre" disabled={true} value="Pepito" />
-				<Input placeholder="Email" disabled={true} value="Pérez" />
-				<Input placeholder="Contraseña" disabled={true} value="prueba123" type="password" />
+				<Input placeholder="Apellido" disabled={true} value="Pepito" />
+				<Input placeholder="Número celular" disabled={true} value="Pepito" />
+				<Input placeholder="Edad" disabled={true} type="number" value="Pepito" />
+				<Input placeholder="Fecha de Nacimiento" disabled={true} value="02/29/2024" />
 				<Input placeholder="Peso" disabled={true} type="number" value="63" />
 				<Input placeholder="Estatura" disabled={true} type="number" value="170" />
+				<Input placeholder="Medicamentos" disabled={true} value="dolex" />
+				<Input placeholder="Condiciones" disabled={true} value="gripa, dolor de cabeza" />
+
+				<Input placeholder="Email" disabled={true} value="Pérez" />
+				<Input placeholder="Contraseña" disabled={true} value="prueba123" type="password" />
 			</div>
 
 			<div className="flex justify-center mt-8">
