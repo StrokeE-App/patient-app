@@ -12,9 +12,10 @@ export type EmergencyInfo = {
 };
 
 export type EmergencyContact = {
-	id: number;
-	name: string;
-	phone: string;
-	relationship: string;
+	firstName: string;
+	lastName: string;
 	email: string;
+	phoneNumber: string;
+	relationship: string;
+	emergencyContactId: number;
 };

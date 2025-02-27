@@ -20,23 +20,40 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
+export async function SignOut() {
+	try {
+		await auth.signOut();
+		// Remove auth token
+		document.cookie = 'authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
+		// Let AuthContext handle the navigation
+	} catch (error) {
+		console.error(error);
+		throw error;
+	}
+}
+
 export async function SignIn(email: string, password: string) {
 	try {
 		const userCredential = await signInWithEmailAndPassword(auth, email, password);
 		const idToken = await userCredential.user.getIdToken();
 
-		// // Send Firebase token to your backend
+		console.log('ID Token: ', idToken);
+
+		// Send Firebase token to your backend
 		const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/login`, {
 			method: 'POST',
-			headers: {'Content-Type': 'application/json'},
+			headers: {'Content-Type': 'application/json', 'x-app-identifier': 'patients'},
 			body: JSON.stringify({token: idToken}),
 		});
 
-		if (!response.ok) throw new Error('Authentication failed');
+		if (!response.ok) {
+			await SignOut();
+			const {message} = await response.json();
+			throw new Error(message);
+		}
 
-		const {userId} = await response.json();
 		// Store backend token in cookie
-		document.cookie = `authToken=${userId}; path=/; secure; samesite=strict`;
+		document.cookie = `authToken=${idToken}; path=/; secure; samesite=strict`;
 
 		// Redirect to dashboard
 		window.location.href = '/dashboard';
@@ -47,18 +64,13 @@ export async function SignIn(email: string, password: string) {
 		return userCredential.user;
 	} catch (error) {
 		console.error(error);
-		throw error;
-	}
-}
 
-export async function SignOut() {
-	try {
-		await auth.signOut();
-		// Remove auth token
-		document.cookie = 'authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
-		// Let AuthContext handle the navigation
-	} catch (error) {
-		console.error(error);
+		// Check if is a credential error and show a custom message
+		const firebaseError = error as {code?: string};
+		if (firebaseError.code === 'auth/user-not-found' || firebaseError.code === 'auth/invalid-credential') {
+			throw new Error('Usuario o contraseña incorrecta.');
+		}
+
 		throw error;
 	}
 }
