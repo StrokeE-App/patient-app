@@ -2,10 +2,17 @@
 
 import {useState} from 'react';
 import Link from 'next/link';
+
+// Components
 import Button from './Button';
 import ConfirmModal from './ConfirmModal';
-import {EmergencyContact} from '@/types';
 import toast from 'react-hot-toast';
+
+// API
+import apiClient from '@/api/api';
+
+// Context
+import {useAuth} from '@/context/AuthContext';
 
 type EmergencyContactCardProps = {
 	name?: string;
@@ -21,25 +28,26 @@ export default function EmergencyContactCard({
 	emergencyContactId,
 }: EmergencyContactCardProps) {
 	const [isModalOpen, setIsModalOpen] = useState(false);
+	const {user} = useAuth();
 
-	const handleDeleteContact = () => {
-		const storedContacts = localStorage.getItem('emergencyContacts');
-		if (storedContacts) {
-			const parsedContacts: EmergencyContact[] = JSON.parse(storedContacts);
-			const updatedContacts = parsedContacts.filter((contact) => contact.id !== emergencyContactId);
-			localStorage.setItem('emergencyContacts', JSON.stringify(updatedContacts));
-			setIsModalOpen(false);
+	// Delete emergency contact from the database
+	const handleDeleteContact = async () => {
+		if (!user) return;
+
+		const loadingToast = toast.loading('Eliminando contacto de emergencia...');
+		try {
+			await apiClient.delete(`/patient/emergency-contacts/${user.uid}/${emergencyContactId}`);
+			toast.success('Contacto eliminado correctamente', {id: loadingToast});
+
+			// Redirect to the emergency contacts page
+			setTimeout(() => {
+				window.location.href = '/emergency-contacts';
+			}, 1000);
+		} catch (error) {
+			toast.error('Error al eliminar el contacto de emergencia', {id: loadingToast});
+			console.error(error);
 		}
-		// Add a toast notification to confirm the deletion
-		toast.success('Contacto eliminado correctamente');
-
-		// Redirect to the emergency contacts page
-		setTimeout(() => {
-			window.location.href = '/emergency-contacts';
-		}, 2000);
 	};
-
-	console.log(emergencyContactId);
 
 	return (
 		<>
