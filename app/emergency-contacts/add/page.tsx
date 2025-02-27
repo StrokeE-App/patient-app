@@ -14,6 +14,7 @@ import {useAuth} from '@/context/AuthContext';
 
 // API
 import apiClient from '@/api/api';
+import {isValidEmail, isValidPhoneNumber} from '@/utils/validations';
 
 export default function AddEmergencyContactPage() {
 	const router = useRouter();
@@ -50,8 +51,14 @@ export default function AddEmergencyContactPage() {
 	const handleAddContact = async () => {
 		if (firstName && lastName && phoneNumber && relationship && email && user) {
 			// Validate phone number format (10 digits)
-			if (!/^\d{10}$/.test(phoneNumber)) {
+			if (!isValidPhoneNumber(phoneNumber)) {
 				toast.error('Número de teléfono inválido.');
+				return;
+			}
+
+			// Validate email format
+			if (!isValidEmail(email)) {
+				toast.error('Correo electrónico inválido.');
 				return;
 			}
 
