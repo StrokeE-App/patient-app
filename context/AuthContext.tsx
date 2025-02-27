@@ -2,7 +2,7 @@
 
 import {createContext, useContext, useEffect, useState, useRef} from 'react';
 import {auth} from '@/firebase/config';
-import {User} from 'firebase/auth';
+import {onIdTokenChanged, User} from 'firebase/auth';
 import {useRouter} from 'next/navigation';
 
 interface AuthContextType {
@@ -74,6 +74,22 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
 			if (timeoutRef.current) clearTimeout(timeoutRef.current);
 		};
 	}, [router]);
+
+	// Update the auth token cookie when the token changes in Firebase
+	useEffect(() => {
+		const unsubscribeToken = onIdTokenChanged(auth, async (user) => {
+			if (user) {
+				const token = await user.getIdToken();
+				document.cookie = `authToken=${token}; path=/; secure; samesite=strict`;
+			} else {
+				document.cookie = 'authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; secure; samesite=strict';
+			}
+		});
+
+		return () => {
+			unsubscribeToken();
+		};
+	}, []);
 
 	return <AuthContext.Provider value={{user, isAuthenticated, isLoading, checkAuthToken}}>{children}</AuthContext.Provider>;
 }
