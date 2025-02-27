@@ -4,8 +4,13 @@ import {useEffect} from 'react';
 import SettingsMenu from '@/components/SettingsMenu';
 import Image from 'next/image';
 import {StrokeeLogo} from '@/components/StrokeeLogo';
+import apiClient from '@/api/api';
+import toast from 'react-hot-toast';
+import {useAuth} from '@/context/AuthContext';
 
 export default function Dashboard() {
+	const {user} = useAuth();
+
 	useEffect(() => {
 		const setVh = () => {
 			const vh = window.innerHeight * 0.01;
@@ -15,6 +20,21 @@ export default function Dashboard() {
 		window.addEventListener('resize', setVh);
 		return () => window.removeEventListener('resize', setVh);
 	}, []);
+
+	const handleStartEmergency = async () => {
+		if (!user) return;
+
+		const loadingToast = toast.loading('Enviando alerta de emergencia...');
+		try {
+			await apiClient.post('/patient/start-emergency', {
+				patientId: user.uid,
+			});
+			toast.success('Alerta de emergencia enviada.', {id: loadingToast});
+		} catch (error) {
+			toast.error('Error al enviar la alerta de emergencia.', {id: loadingToast});
+			console.log(error);
+		}
+	};
 
 	return (
 		<main style={{minHeight: 'calc(var(--vh, 1vh) * 100)'}} className=" p-4 flex flex-col justify-between">
@@ -26,7 +46,10 @@ export default function Dashboard() {
 				{/* <h1 className="text-3xl font-bold text-gray-900 mb-8">En proceso</h1> */}
 
 				{/* Panic Button */}
-				<div className="relative flex justify-center items-center hover:scale-105 transition-transform duration-300 ease-out cursor-pointer">
+				<div
+					onClick={handleStartEmergency}
+					className="relative flex justify-center items-center hover:scale-105 transition-transform duration-300 ease-out cursor-pointer"
+				>
 					<Image src="/images/panic-button.svg" alt="Botón de pánico" width={250} height={250} />
 				</div>
 			</div>
