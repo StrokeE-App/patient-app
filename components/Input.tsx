@@ -21,8 +21,15 @@ export default function Input({
 }: InputProps) {
 	return (
 		<>
-			{withLabel && <label htmlFor={name}>{placeholder}</label>}
+			{withLabel && (
+				<div className="w-full max-w-[40rem] flex justify-start pl-2 -mb-4 text-gray-500">
+					<label htmlFor={name} className="text-left">
+						{placeholder}
+					</label>
+				</div>
+			)}
 			<input
+				id={name}
 				name={name}
 				type={type}
 				placeholder={placeholder}
