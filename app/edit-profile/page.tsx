@@ -15,10 +15,11 @@ import apiClient from '@/api/api';
 import {useAuth} from '@/context/AuthContext';
 import toast from 'react-hot-toast';
 import {isValidEmail, isValidPhoneNumber} from '@/utils/validations';
+import {EditPatientData} from '@/types';
 
 export default function EditProfilePage() {
 	const [isLoading, setIsLoading] = useState(false);
-	const [patient, setPatient] = useState({
+	const [patient, setPatient] = useState<EditPatientData>({
 		firstName: '',
 		lastName: '',
 		phoneNumber: '',
@@ -28,10 +29,21 @@ export default function EditProfilePage() {
 		height: 0,
 		medications: '',
 		conditions: '',
+	});
+	const [patientCredentials, setPatientCredentials] = useState({
 		email: '',
 		password: '',
 	});
+
 	const {user} = useAuth();
+
+	// Helper function to format date to DD/MM/AAAA
+	function formatDate(date: Date): string {
+		const day = date.getDate().toString().padStart(2, '0');
+		const month = (date.getMonth() + 1).toString().padStart(2, '0');
+		const year = date.getFullYear();
+		return `${day}/${month}/${year}`;
+	}
 
 	// Fetch patient data from database
 	useEffect(() => {
@@ -43,7 +55,14 @@ export default function EditProfilePage() {
 				setIsLoading(true);
 				const response = await apiClient.get(`/patient/${user.uid}`);
 				const patient = response.data.data;
-				setPatient(patient);
+				setPatient({
+					...patient,
+					patiendId: undefined,
+				});
+				setPatientCredentials({
+					email: patient.email,
+					password: '',
+				});
 				setIsLoading(false);
 				toast.success('Datos cargados.', {id: loadingToast});
 			} catch (error) {
@@ -84,12 +103,16 @@ export default function EditProfilePage() {
 		}
 
 		// Validate email format
-		if (!isValidEmail(patient.email)) {
+		if (!isValidEmail(patientCredentials.email)) {
 			toast.error('Correo electrónico inválido.');
 			return;
 		}
 
+		// Format date to DD/MM/AAAA
+		const birthDate = formatDate(new Date(patient.birthDate));
+
 		console.log(patient);
+		console.log(birthDate);
 
 		// Convert medications and conditions to arrays if they are strings
 		let patientMedications: string | string[] = patient.medications;
@@ -107,6 +130,10 @@ export default function EditProfilePage() {
 				...patient,
 				medications: patientMedications,
 				conditions: patientConditions,
+				birthDate,
+				patientId: undefined,
+				email: undefined,
+				password: undefined,
 			});
 			toast.success('Perfil actualizado.', {id: loadingToast});
 		} catch (error) {
@@ -114,6 +141,8 @@ export default function EditProfilePage() {
 			console.error(error);
 		}
 	};
+
+	console.log(patient);
 
 	if (!user) return null;
 
@@ -155,7 +184,7 @@ export default function EditProfilePage() {
 				<Input name="conditions" placeholder="Condiciones" value={patient.conditions} withLabel onChange={handleOnChangeData} />
 				<br />
 				<br />
-				<Input name="email" placeholder="Email" disabled={true} value={user.email || ''} withLabel onChange={handleOnChangeData} />
+				<Input name="email" placeholder="Email" disabled={true} value={patientCredentials.email} withLabel onChange={handleOnChangeData} />
 				<Input name="password " placeholder="Nueva Contraseña" disabled={true} value="" type="password" withLabel onChange={handleOnChangeData} />
 			</div>
 
