@@ -37,8 +37,6 @@ export async function SignIn(email: string, password: string) {
 		const userCredential = await signInWithEmailAndPassword(auth, email, password);
 		const idToken = await userCredential.user.getIdToken();
 
-		console.log('ID Token: ', idToken);
-
 		// Send Firebase token to your backend
 		const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/login`, {
 			method: 'POST',

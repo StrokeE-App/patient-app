@@ -20,6 +20,7 @@ import apiClient from '@/api/api';
 import {useAuth} from '@/context/AuthContext';
 
 export default function EmergencyContactsPage() {
+	const [isLoading, setIsLoading] = useState(false);
 	const [emergencyContacts, setEmergencyContacts] = useState<EmergencyContact[]>([]);
 	const {user} = useAuth();
 
@@ -37,10 +38,13 @@ export default function EmergencyContactsPage() {
 		const fetchEmergencyContacts = async () => {
 			const loadingToast = toast.loading('Cargando Contactos de Emergencia...');
 			try {
+				setIsLoading(true);
 				const response = await apiClient.get(`/patient/emergency-contacts/all/${user.uid}`);
 				setEmergencyContacts(response.data.data);
+				setIsLoading(false);
 				toast.success('Contactos de Emergencia cargados.', {id: loadingToast});
 			} catch (error) {
+				setIsLoading(false);
 				toast.error('Error al cargar los Contactos de Emergencia.', {id: loadingToast});
 				console.error(error);
 			}
@@ -48,6 +52,14 @@ export default function EmergencyContactsPage() {
 
 		fetchEmergencyContacts();
 	}, [user]);
+
+	if (isLoading) {
+		return (
+			<div className="flex justify-center items-center h-screen">
+				<div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-customRed"></div>
+			</div>
+		);
+	}
 
 	return (
 		<>

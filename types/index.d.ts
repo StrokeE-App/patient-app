@@ -19,3 +19,15 @@ export type EmergencyContact = {
 	relationship: string;
 	emergencyContactId: number;
 };
+
+export type EditPatientData = {
+	firstName: string;
+	lastName: string;
+	phoneNumber: string;
+	age: number;
+	birthDate: string;
+	weight: number;
+	height: number;
+	medications: string[];
+	conditions: string[];
+};
