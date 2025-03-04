@@ -28,6 +28,6 @@ export type EditPatientData = {
 	birthDate: string;
 	weight: number;
 	height: number;
-	medications: string;
-	conditions: string;
+	medications: string[];
+	conditions: string[];
 };

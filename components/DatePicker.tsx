@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import '@/styles/custom-react-datepicker.css'; // Import custom overrides
 
 type DatePickerProps = {
 	// Selected date value as a Date or null
@@ -29,6 +30,9 @@ export default function DatePicker({selected, onChange, name, withLabel = false,
 				name={name}
 				wrapperClassName="w-full"
 				dateFormat="dd/MM/yyyy"
+				showYearDropdown // Enables the year dropdown
+				scrollableYearDropdown // Makes the year dropdown scrollable
+				yearDropdownItemNumber={100} // Set number of years to show
 				className="w-full px-4 py-3 rounded-full border border-gray-200 shadow-lg focus:outline-none focus:ring-2 focus:ring-customRed focus:border-transparent"
 			/>
 		</div>

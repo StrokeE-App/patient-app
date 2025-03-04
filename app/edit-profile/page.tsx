@@ -7,6 +7,7 @@ import Link from 'next/link';
 // Components
 import Input from '@/components/Input';
 import DatePicker from '@/components/DatePicker';
+import MultiSelectPicker from '@/components/MultiSelectPicker';
 
 // API
 import apiClient from '@/api/api';
@@ -16,6 +17,20 @@ import {useAuth} from '@/context/AuthContext';
 import toast from 'react-hot-toast';
 import {isValidEmail, isValidPhoneNumber} from '@/utils/validations';
 import {EditPatientData} from '@/types';
+
+// Helper function to format date to DD/MM/AAAA
+function formatDate(date: Date): string {
+	const day = (date.getDate() + 1).toString().padStart(2, '0');
+	const month = (date.getMonth() + 1).toString().padStart(2, '0');
+	const year = date.getFullYear();
+	return `${year}-${month}-${day}`;
+}
+
+// Helper to convert a UTC ISO string to a local Date with same year/month/day
+function convertUTCToLocal(dateStr: string): Date {
+	const d = new Date(dateStr);
+	return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+}
 
 export default function EditProfilePage() {
 	const [isLoading, setIsLoading] = useState(false);
@@ -27,8 +42,8 @@ export default function EditProfilePage() {
 		birthDate: '',
 		weight: 0,
 		height: 0,
-		medications: '',
-		conditions: '',
+		medications: [],
+		conditions: [],
 	});
 	const [patientCredentials, setPatientCredentials] = useState({
 		email: '',
@@ -36,14 +51,6 @@ export default function EditProfilePage() {
 	});
 
 	const {user} = useAuth();
-
-	// Helper function to format date to DD/MM/AAAA
-	function formatDate(date: Date): string {
-		const day = date.getDate().toString().padStart(2, '0');
-		const month = (date.getMonth() + 1).toString().padStart(2, '0');
-		const year = date.getFullYear();
-		return `${day}/${month}/${year}`;
-	}
 
 	// Fetch patient data from database
 	useEffect(() => {
@@ -115,14 +122,17 @@ export default function EditProfilePage() {
 		console.log(birthDate);
 
 		// Convert medications and conditions to arrays if they are strings
-		let patientMedications: string | string[] = patient.medications;
-		let patientConditions: string | string[] = patient.conditions;
-		if (typeof patient.medications === 'string') {
-			patientMedications = patient.medications.split(',').map((med: string) => med.trim());
-		}
-		if (typeof patient.conditions === 'string') {
-			patientConditions = patient.conditions.split(',').map((cond: string) => cond.trim());
-		}
+		const patientMedications: string | string[] = patient.medications;
+		const patientConditions: string | string[] = patient.conditions;
+
+		console.log('patientMedications', patientMedications);
+		console.log('patientConditions', patientConditions);
+		// if (typeof patient.medications === 'string') {
+		// 	patientMedications = patient.medications.split(',').map((med: string) => med.trim());
+		// }
+		// if (typeof patient.conditions === 'string') {
+		// 	patientConditions = patient.conditions.split(',').map((cond: string) => cond.trim());
+		// }
 
 		const loadingToast = toast.loading('Actualizando perfil...');
 		try {
@@ -173,15 +183,27 @@ export default function EditProfilePage() {
 				<Input name="age" placeholder="Edad" type="number" value={patient.age} withLabel onChange={handleOnChangeData} />
 				<DatePicker
 					name="birthDate"
-					selected={patient.birthDate ? new Date(patient.birthDate) : null}
+					selected={patient.birthDate ? convertUTCToLocal(patient.birthDate) : null}
 					onChange={handleBirthDateChange}
 					withLabel
 					label="Fecha de nacimiento"
 				/>
 				<Input name="weight" placeholder="Peso (kg)" type="number" value={patient.weight} withLabel onChange={handleOnChangeData} />
 				<Input name="height" placeholder="Estatura (m)" type="number" value={patient.height} withLabel onChange={handleOnChangeData} />
-				<Input name="medications" placeholder="Medicamentos" value={patient.medications} withLabel onChange={handleOnChangeData} />
-				<Input name="conditions" placeholder="Condiciones" value={patient.conditions} withLabel onChange={handleOnChangeData} />
+				<MultiSelectPicker
+					label="Medicamentos"
+					options={['Aspirina', 'Ibuprofeno', 'Paracetamol', 'dolex']}
+					selected={patient.medications}
+					onChange={(selected) => setPatient({...patient, medications: selected})}
+					placeholder="Seleccione o escriba para buscar medicamentos..."
+				/>
+				<MultiSelectPicker
+					label="Condiciones"
+					options={['Hipertensión', 'Diabetes', 'Asma', 'Gripa', 'Dolor de Cabeza']}
+					selected={patient.conditions}
+					onChange={(selected) => setPatient({...patient, conditions: selected})}
+					placeholder="Seleccione o escriba para buscar condiciones..."
+				/>
 				<br />
 				<br />
 				<Input name="email" placeholder="Email" disabled={true} value={patientCredentials.email} withLabel onChange={handleOnChangeData} />
