@@ -3,6 +3,7 @@
 import React, {useEffect, useState} from 'react';
 import {ArrowBigLeft} from 'lucide-react';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
 
 // Components
 import Input from '@/components/Input';
@@ -14,23 +15,13 @@ import apiClient from '@/api/api';
 
 // Context
 import {useAuth} from '@/context/AuthContext';
-import toast from 'react-hot-toast';
+
+// Utils
 import {isValidEmail, isValidPhoneNumber} from '@/utils/validations';
+import { convertUTCToLocal, formatDate } from '@/utils/functions';
+
+// Types
 import {EditPatientData} from '@/types';
-
-// Helper function to format date to DD/MM/AAAA
-function formatDate(date: Date): string {
-	const day = (date.getDate() + 1).toString().padStart(2, '0');
-	const month = (date.getMonth() + 1).toString().padStart(2, '0');
-	const year = date.getFullYear();
-	return `${year}-${month}-${day}`;
-}
-
-// Helper to convert a UTC ISO string to a local Date with same year/month/day
-function convertUTCToLocal(dateStr: string): Date {
-	const d = new Date(dateStr);
-	return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
-}
 
 export default function EditProfilePage() {
 	const [isLoading, setIsLoading] = useState(false);
@@ -65,6 +56,7 @@ export default function EditProfilePage() {
 				setPatient({
 					...patient,
 					patiendId: undefined,
+					emergencyContact: undefined,
 				});
 				setPatientCredentials({
 					email: patient.email,
@@ -117,9 +109,6 @@ export default function EditProfilePage() {
 
 		// Format date to DD/MM/AAAA
 		const birthDate = formatDate(new Date(patient.birthDate));
-
-		console.log(patient);
-		console.log(birthDate);
 
 		// Convert medications and conditions to arrays if they are strings
 		const patientMedications: string | string[] = patient.medications;

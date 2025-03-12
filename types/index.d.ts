@@ -24,10 +24,10 @@ export type EditPatientData = {
 	firstName: string;
 	lastName: string;
 	phoneNumber: string;
-	age: number;
+	age: number | string;
 	birthDate: string;
-	weight: number;
-	height: number;
+	weight: number | string;
+	height: number | string;
 	medications: string[];
 	conditions: string[];
 };

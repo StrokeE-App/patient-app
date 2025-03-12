@@ -7,6 +7,9 @@ type InputProps = {
 	required?: boolean;
 	disabled?: boolean;
 	withLabel?: boolean;
+	maxLength?: number;
+	min?: string | number;
+	step?: string | number;
 };
 
 export default function Input({
@@ -18,6 +21,9 @@ export default function Input({
 	required = false,
 	disabled = false,
 	withLabel = false,
+	maxLength,
+	min,
+	step,
 }: InputProps) {
 	return (
 		<>
@@ -38,6 +44,9 @@ export default function Input({
 				className="w-full px-4 py-3 rounded-full border border-gray-200 shadow-lg focus:outline-none focus:ring-2 focus:ring-customRed focus:border-transparent max-w-[40rem]"
 				required={required}
 				disabled={disabled}
+				maxLength={maxLength}
+				min={min}
+				step={step}
 			/>
 		</>
 	);
