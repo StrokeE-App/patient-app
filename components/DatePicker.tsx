@@ -14,9 +14,18 @@ type DatePickerProps = {
 	withLabel?: boolean;
 	// Optional label text
 	label?: string;
+	// Optional required flag
+	required?: boolean;
 };
 
-export default function DatePicker({selected, onChange, name, withLabel = false, label = ''}: DatePickerProps) {
+export default function DatePicker({
+	selected, 
+	onChange, 
+	name, 
+	withLabel = false, 
+	label = '',
+	required = false
+}: DatePickerProps) {
 	return (
 		<div className="w-full max-w-[40rem]">
 			{withLabel && label && (
@@ -34,6 +43,7 @@ export default function DatePicker({selected, onChange, name, withLabel = false,
 				scrollableYearDropdown // Makes the year dropdown scrollable
 				yearDropdownItemNumber={100} // Set number of years to show
 				className="w-full px-4 py-3 rounded-full border border-gray-200 shadow-lg focus:outline-none focus:ring-2 focus:ring-customRed focus:border-transparent"
+				required={required}
 			/>
 		</div>
 	);
