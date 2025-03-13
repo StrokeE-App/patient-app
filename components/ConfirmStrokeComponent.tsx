@@ -30,15 +30,13 @@ export default function ConfirmStrokeComponent({ emergencyId }: ConfirmStrokeCom
   return (
     <div className="w-10/12 max-w-md mx-auto flex flex-col space-y-4 mb-5">
       <Button
-        title="Confirmar Stroke"
         onClick={() => openModal("¿Estás seguro que quieres confirmar el stroke?", "confirm")}
-        color="red"
-      />
+        className="bg-customRed"
+      >Confirmar Stroke</Button>
       <Button
-        title="Descartar Stroke"
         onClick={() => openModal("¿Estás seguro que quieres descartar el stroke?", "discard")}
-        color="green"
-      />
+        className="bg-customGreen"
+      >Descartar Stroke</Button>
       <ConfirmModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

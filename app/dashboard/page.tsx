@@ -28,6 +28,7 @@ export default function Dashboard() {
 		try {
 			await apiClient.post('/patient/start-emergency', {
 				patientId: user.uid,
+				role: 'patient',
 			});
 			toast.success('Alerta de emergencia enviada.', {id: loadingToast});
 		} catch (error) {
@@ -48,10 +49,25 @@ export default function Dashboard() {
 				{/* Panic Button */}
 				<div
 					onClick={handleStartEmergency}
-					className="relative flex justify-center items-center hover:scale-105 transition-transform duration-300 ease-out cursor-pointer"
+					className="mb-8 relative flex justify-center items-center hover:scale-105 transition-transform duration-300 ease-out cursor-pointer"
 				>
 					<Image src="/images/panic-button.svg" alt="Botón de pánico" width={250} height={250} />
 				</div>
+
+				<p className="text-gray-600 mb-6">
+					Reconoce un ACV con la regla <b>BEFAST</b>
+				</p>
+
+				<ul className='list-disc list-inside mb-8'>
+					<li>
+					<b>B</b>alance (Equilibrio): Pérdida repentina del equilibrio o coordinación.
+					</li>
+					<li><b>E</b>yes (Vista): Visión borrosa o pérdida de visión en uno o ambos ojos.</li>
+					<li><b>F</b>ace (Cara): Caída o asimetría en un lado de la cara.</li>
+					<li><b>A</b>rms (Brazos): Dificultad para levantar un brazo o debilidad en un lado del cuerpo.</li>
+					<li><b>S</b>peech (Habla): Dificultad para hablar o comprender el lenguaje.</li>
+					<li><b>T</b>ime (Tiempo): ¡Cada segundo cuenta! Llama a emergencias de inmediato.</li>
+				</ul>
 			</div>
 
 			{/* Footer */}

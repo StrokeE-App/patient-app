@@ -21,6 +21,9 @@ import { convertUTCToLocal, formatDate } from '@/utils/functions';
 // Types
 import {EditPatientData} from '@/types';
 
+// Mocks
+import { conditionsList, medicinesList } from '@/mocks/patientData';
+
 
 export default function RegisterPage() {
 	const router = useRouter();
@@ -182,7 +185,7 @@ export default function RegisterPage() {
 				height: parseFloat(String(patient.height)),
 				email: credentials.email,
 				password: credentials.password,
-				verificationCode: verificationCode,
+				token: verificationCode,
 				emergencyContact: [],
 			});
 			
@@ -296,18 +299,20 @@ export default function RegisterPage() {
 						
 						<MultiSelectPicker
 							label="Medicamentos"
-							options={['Aspirina', 'Ibuprofeno', 'Paracetamol', 'Dolex']}
+							options={medicinesList}
 							selected={patient.medications}
 							onChange={(selected) => setPatient({...patient, medications: selected})}
 							placeholder="Seleccione o escriba para buscar medicamentos..."
+							creatable={true}
 						/>
 						
 						<MultiSelectPicker
 							label="Condiciones"
-							options={['Hipertensión', 'Diabetes', 'Asma', 'Gripa', 'Dolor de Cabeza']}
+							options={conditionsList}
 							selected={patient.conditions}
 							onChange={(selected) => setPatient({...patient, conditions: selected})}
 							placeholder="Seleccione o escriba para buscar condiciones..."
+							creatable={true}
 						/>
 					</div>
 					
@@ -355,7 +360,7 @@ export default function RegisterPage() {
 							maxLength={6}
 						/>
 						<p className="text-xs text-gray-500 pl-2 -mt-2">
-							Ingrese el código de verificación de 6 dígitos proporcionado.
+							Ingrese el código de verificación proporcionado en el correo.
 						</p>
 					</div>
 					

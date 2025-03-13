@@ -1,8 +1,8 @@
 'use client';
-
 import {useState} from 'react';
 import {SignIn} from '@/firebase/config';
 import toast from 'react-hot-toast';
+import { useAuth } from '@/context/AuthContext';
 
 type LoginFormProps = {
 	placeholder?: string;
@@ -12,14 +12,22 @@ export function LoginForm({placeholder = 'Usuario'}: LoginFormProps) {
 	const [username, setUserName] = useState('');
 	const [password, setPassword] = useState('');
 	const [isLoading, setIsLoading] = useState(false);
+	const { setUserRole } = useAuth();
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setIsLoading(true);
 		const loadingToast = toast.loading('Iniciando sesión...');
-
 		try {
-			await SignIn(username, password);
+			// The SignIn function now returns both user and role
+			const authResult = await SignIn(username, password);
+			
+			// If we have a role, set it directly in the AuthContext
+			if (authResult.role) {
+				console.log('Setting role immediately after login:', authResult.role);
+				setUserRole(authResult.role);
+			}
+			
 			toast.success('¡Bienvenido!', {id: loadingToast});
 		} catch (error) {
 			if (error instanceof Error) {

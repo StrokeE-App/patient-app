@@ -1,6 +1,7 @@
 // Import the functions you need from the SDKs you need
 import {initializeApp} from 'firebase/app';
 import {getAuth, signInWithEmailAndPassword} from 'firebase/auth';
+import { setCookie, deleteCookie } from '@/utils/cookies';
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -23,8 +24,9 @@ const auth = getAuth(app);
 export async function SignOut() {
 	try {
 		await auth.signOut();
-		// Remove auth token
-		document.cookie = 'authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
+		// Remove auth token and role using the utility function
+		deleteCookie('authToken');
+		deleteCookie('userRole');
 		// Let AuthContext handle the navigation
 	} catch (error) {
 		console.error(error);
@@ -38,28 +40,59 @@ export async function SignIn(email: string, password: string) {
 		const idToken = await userCredential.user.getIdToken();
 
 		// Send Firebase token to your backend
+		console.log('Sending token to backend for authentication');
 		const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/login`, {
 			method: 'POST',
 			headers: {'Content-Type': 'application/json', 'x-app-identifier': 'patients'},
 			body: JSON.stringify({token: idToken}),
 		});
 
+		const data = await response.json();
+		console.log('Login response data:', data);
+
 		if (!response.ok) {
 			await SignOut();
-			const {message} = await response.json();
+			const {message} = data;
 			throw new Error(message);
 		}
 
-		// Store backend token in cookie
-		document.cookie = `authToken=${idToken}; path=/; secure; samesite=strict`;
+		console.log("User role from API:", data.role);
 
-		// Redirect to dashboard
-		window.location.href = '/dashboard';
+		// Store backend token in cookie using the utility function
+		setCookie('authToken', idToken, {
+			path: '/',
+			secure: true,
+			sameSite: 'strict'
+		});
+		
+		let userRole = null;
+		
+		// Store user role in cookie using the utility function
+		if (data.role) {
+			userRole = data.role;
+			console.log(`Setting userRole cookie: ${data.role}`);
+			setCookie('userRole', data.role, {
+				path: '/',
+				secure: true,
+				sameSite: 'strict'
+			});
+			
+			// Double check if cookie was set
+			setTimeout(() => {
+				const cookies = document.cookie.split(';').map(c => c.trim());
+				console.log('All cookies after login:', cookies);
+				const roleCookie = cookies.find(cookie => cookie.startsWith('userRole='));
+				console.log('Role cookie found:', roleCookie);
+			}, 100);
+		} else {
+			console.warn('No role returned from API');
+		}
 
-		// Manually add auth token to cookie for demonstration purposes
-		// document.cookie = `authToken=123; path=/; secure; samesite=strict`;
-
-		return userCredential.user;
+		// Return both user and role
+		return {
+			user: userCredential.user,
+			role: userRole
+		};
 	} catch (error) {
 		console.error(error);
 
