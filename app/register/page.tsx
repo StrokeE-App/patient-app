@@ -1,9 +1,10 @@
 'use client';
 
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import Link from 'next/link';
 import {useRouter} from 'next/navigation';
 import toast from 'react-hot-toast';
+import axios from 'axios';
 
 // Components
 import Input from '@/components/Input';
@@ -16,26 +17,42 @@ import apiClient from '@/api/api';
 
 // Utils
 import {isValidEmail, isValidPhoneNumber} from '@/utils/validations';
-import { convertUTCToLocal, formatDate } from '@/utils/functions';
+import {convertUTCToLocal, formatDate} from '@/utils/functions';
 
 // Types
 import {EditPatientData} from '@/types';
 
 // Mocks
-import { conditionsList, medicinesList } from '@/mocks/patientData';
-
+import {conditionsList, medicinesList} from '@/mocks/patientData';
+import {useAuth} from '@/context/AuthContext';
 
 export default function RegisterPage() {
 	const router = useRouter();
+	const {isAuthenticated, isLoading: isLoadingAuth, role} = useAuth();
+
+	// Redirect to dashboard or emergency panel if user is authenticated
+	useEffect(() => {
+		if (!isLoadingAuth && isAuthenticated) {
+			// Redirect based on role
+			if (role === 'emergencyContact') {
+				router.push('/emergency-panel');
+			} else {
+				// Default to dashboard for patients or any other role
+				router.push('/dashboard');
+			}
+		}
+	}, [isLoadingAuth, isAuthenticated, router, role]);
+
+	// Register patient
 	const [isLoading, setIsLoading] = useState(false);
 	const [patient, setPatient] = useState<EditPatientData>({
 		firstName: '',
 		lastName: '',
 		phoneNumber: '',
-		age: '', // Changed to empty string
+		age: '',
 		birthDate: '',
-		weight: '', // Changed to empty string
-		height: '', // Changed to empty string
+		weight: '',
+		height: '',
 		medications: [],
 		conditions: [],
 	});
@@ -46,13 +63,10 @@ export default function RegisterPage() {
 	});
 	const [verificationCode, setVerificationCode] = useState('');
 
-
-    console.log(patient);
-
 	// Handle input changes and update patient state
 	const handleOnChangeData = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const {name, value} = e.target;
-		
+
 		// Special handling for numeric fields to ensure they're positive
 		if (name === 'age' || name === 'weight' || name === 'height') {
 			// Allow empty value or positive number
@@ -87,7 +101,7 @@ export default function RegisterPage() {
 
 	// Handle verification code change
 	const handleVerificationCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const { value } = e.target;
+		const {value} = e.target;
 		// Only allow numbers and limit to 6 characters
 		const numericValue = value.replace(/[^0-9]/g, '');
 		setVerificationCode(numericValue.slice(0, 6));
@@ -105,20 +119,20 @@ export default function RegisterPage() {
 	const handleRegister = async (e: React.FormEvent) => {
 		e.preventDefault();
 
-        // Format date to DD/MM/AAAA
-        const birthDate = formatDate(new Date(patient.birthDate));
+		// Format date to DD/MM/AAAA
+		const birthDate = formatDate(new Date(patient.birthDate));
 
-        console.log(birthDate);
-		
+		console.log(birthDate);
+
 		// Form validations
 		if (!patient.firstName || !patient.lastName) {
 			toast.error('Por favor ingrese su nombre y apellido.');
 			return;
 		}
-		
-			// Trim phone number to ensure no spaces
+
+		// Trim phone number to ensure no spaces
 		const trimmedPhoneNumber = patient.phoneNumber.trim();
-		
+
 		// Validate phone number format
 		if (!isValidPhoneNumber(trimmedPhoneNumber)) {
 			toast.error('Número de teléfono inválido.');
@@ -126,9 +140,9 @@ export default function RegisterPage() {
 		}
 
 		// Update the patient state with the trimmed phone number
-		setPatient(prevState => ({
+		setPatient((prevState) => ({
 			...prevState,
-			phoneNumber: trimmedPhoneNumber
+			phoneNumber: trimmedPhoneNumber,
 		}));
 
 		// Validate numeric fields
@@ -164,19 +178,19 @@ export default function RegisterPage() {
 			toast.error('Las contraseñas no coinciden.');
 			return;
 		}
-		
+
 		// Validate verification code
 		if (verificationCode.length !== 6) {
 			toast.error('El código de verificación debe tener 6 dígitos.');
 			return;
 		}
-		
+
 		setIsLoading(true);
 		const loadingToast = toast.loading('Creando cuenta...');
 
 		try {
 			// Register patient through backend endpoint
-			const response = await apiClient.post('/patient/register', {
+			await apiClient.post('/patient/register', {
 				...patient,
 				phoneNumber: trimmedPhoneNumber, // Use trimmed phone number
 				// Convert string values to numbers for API submission
@@ -188,25 +202,25 @@ export default function RegisterPage() {
 				token: verificationCode,
 				emergencyContact: [],
 			});
-			
+
 			// Successful registration
 			toast.success('¡Cuenta creada con éxito!', {id: loadingToast});
-			
+
 			// Redirect to login page
 			router.push('/login');
-		} catch (error: any) {
+		} catch (error: unknown) {
 			// Handle error responses from the backend
 			let errorMessage = 'Error al crear la cuenta.';
-			
-			if (error.response) {
+
+			if (axios.isAxiosError(error)) {
 				// Backend returned an error response
-				if (error.response.data && error.response.data.message) {
+				if (error.response?.data?.message) {
 					errorMessage = error.response.data.message;
 				}
 			} else if (error instanceof Error) {
 				errorMessage = error.message;
 			}
-			
+
 			toast.error(errorMessage, {id: loadingToast});
 		} finally {
 			setIsLoading(false);
@@ -219,51 +233,21 @@ export default function RegisterPage() {
 				<div className="flex justify-center my-6">
 					<StrokeeLogo />
 				</div>
-				
+
 				<h1 className="text-3xl font-bold text-center text-gray-900 mb-8">Crear Cuenta</h1>
-				
+
 				<form onSubmit={handleRegister} className="space-y-6">
 					<div className="space-y-4">
 						<h2 className="text-xl font-semibold text-gray-700">Información Personal</h2>
-						
-						<Input 
-							name="firstName" 
-							placeholder="Nombre" 
-							value={patient.firstName} 
-							withLabel 
-							onChange={handleOnChangeData} 
-							required 
-						/>
-						
-						<Input 
-							name="lastName" 
-							placeholder="Apellido" 
-							value={patient.lastName} 
-							withLabel 
-							onChange={handleOnChangeData} 
-							required 
-						/>
-						
-						<Input 
-							name="phoneNumber" 
-							placeholder="Número celular" 
-							value={patient.phoneNumber} 
-							withLabel 
-							onChange={handleOnChangeData} 
-							required 
-						/>
-						
-						<Input 
-							name="age" 
-							placeholder="Edad" 
-							type="number" 
-							value={patient.age} 
-							withLabel 
-							onChange={handleOnChangeData} 
-							required 
-							min="1"
-						/>
-						
+
+						<Input name="firstName" placeholder="Nombre" value={patient.firstName} withLabel onChange={handleOnChangeData} required />
+
+						<Input name="lastName" placeholder="Apellido" value={patient.lastName} withLabel onChange={handleOnChangeData} required />
+
+						<Input name="phoneNumber" placeholder="Número celular" value={patient.phoneNumber} withLabel onChange={handleOnChangeData} required />
+
+						<Input name="age" placeholder="Edad" type="number" value={patient.age} withLabel onChange={handleOnChangeData} required min="1" />
+
 						<DatePicker
 							name="birthDate"
 							selected={patient.birthDate ? convertUTCToLocal(patient.birthDate) : null}
@@ -272,31 +256,31 @@ export default function RegisterPage() {
 							label="Fecha de nacimiento"
 							required
 						/>
-						
-						<Input 
-							name="weight" 
-							placeholder="Peso (kg)" 
-							type="number" 
-							value={patient.weight} 
-							withLabel 
+
+						<Input
+							name="weight"
+							placeholder="Peso (kg)"
+							type="number"
+							value={patient.weight}
+							withLabel
 							onChange={handleOnChangeData}
-							required 
+							required
 							min="0.1"
 							step="0.01"
 						/>
-						
-						<Input 
-							name="height" 
-							placeholder="Estatura (m)" 
-							type="number" 
-							value={patient.height} 
-							withLabel 
+
+						<Input
+							name="height"
+							placeholder="Estatura (m)"
+							type="number"
+							value={patient.height}
+							withLabel
 							onChange={handleOnChangeData}
-							required 
+							required
 							min="0.1"
 							step="0.01"
 						/>
-						
+
 						<MultiSelectPicker
 							label="Medicamentos"
 							options={medicinesList}
@@ -305,7 +289,7 @@ export default function RegisterPage() {
 							placeholder="Seleccione o escriba para buscar medicamentos..."
 							creatable={true}
 						/>
-						
+
 						<MultiSelectPicker
 							label="Condiciones"
 							options={conditionsList}
@@ -315,55 +299,53 @@ export default function RegisterPage() {
 							creatable={true}
 						/>
 					</div>
-					
+
 					<div className="space-y-4 mt-8">
 						<h2 className="text-xl font-semibold text-gray-700">Información de Cuenta</h2>
-						
-						<Input 
-							name="email" 
-							placeholder="Correo electrónico" 
-							type="email" 
-							value={credentials.email} 
-							withLabel 
-							onChange={handleCredentialsChange} 
-							required 
-						/>
-						
-						<Input 
-							name="password" 
-							placeholder="Contraseña" 
-							type="password" 
-							value={credentials.password} 
-							withLabel 
-							onChange={handleCredentialsChange} 
-							required 
-						/>
-						
-						<Input 
-							name="confirmPassword" 
-							placeholder="Confirmar contraseña" 
-							type="password" 
-							value={credentials.confirmPassword} 
-							withLabel 
-							onChange={handleCredentialsChange} 
-							required 
+
+						<Input
+							name="email"
+							placeholder="Correo electrónico"
+							type="email"
+							value={credentials.email}
+							withLabel
+							onChange={handleCredentialsChange}
+							required
 						/>
 
-						<Input 
-							name="verificationCode" 
-							placeholder="Código de verificación (6 dígitos)" 
-							type="text" 
-							value={verificationCode} 
-							withLabel 
-							onChange={handleVerificationCodeChange} 
-							required 
+						<Input
+							name="password"
+							placeholder="Contraseña"
+							type="password"
+							value={credentials.password}
+							withLabel
+							onChange={handleCredentialsChange}
+							required
+						/>
+
+						<Input
+							name="confirmPassword"
+							placeholder="Confirmar contraseña"
+							type="password"
+							value={credentials.confirmPassword}
+							withLabel
+							onChange={handleCredentialsChange}
+							required
+						/>
+
+						<Input
+							name="verificationCode"
+							placeholder="Código de verificación (6 dígitos)"
+							type="text"
+							value={verificationCode}
+							withLabel
+							onChange={handleVerificationCodeChange}
+							required
 							maxLength={6}
 						/>
-						<p className="text-xs text-gray-500 pl-2 -mt-2">
-							Ingrese el código de verificación proporcionado en el correo.
-						</p>
+						<p className="text-xs text-gray-500 pl-2 -mt-2">Ingrese el código de verificación proporcionado en el correo.</p>
 					</div>
-					
+
 					<div className="flex flex-col items-center gap-4 mt-8">
 						<button
 							type="submit"
@@ -372,7 +354,7 @@ export default function RegisterPage() {
 						>
 							{isLoading ? 'Creando cuenta...' : 'Crear Cuenta'}
 						</button>
-						
+
 						<p className="text-gray-600">
 							¿Ya tienes una cuenta?{' '}
 							<Link href="/login" className="text-customRed font-semibold">

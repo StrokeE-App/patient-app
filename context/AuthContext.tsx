@@ -3,7 +3,12 @@ import {createContext, useContext, useEffect, useState, useRef} from 'react';
 import {auth} from '@/firebase/config';
 import {onIdTokenChanged, User} from 'firebase/auth';
 import {useRouter} from 'next/navigation';
-import { getCookie, setCookie, deleteCookie } from '@/utils/cookies';
+
+// Utils
+import {getCookie, setCookie, deleteCookie} from '@/utils/cookies';
+
+// Config
+import {publicRoutes} from '@/config/routes';
 
 interface AuthContextType {
 	user: User | null;
@@ -29,16 +34,16 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
 	const [isLoading, setIsLoading] = useState(true);
 	const [isMounted, setIsMounted] = useState(false);
 	const [role, setRole] = useState<string | null>(null);
-	const intervalRef = useRef<NodeJS.Timeout>();
-	const timeoutRef = useRef<NodeJS.Timeout>();
+	const intervalRef = useRef<NodeJS.Timeout | undefined>(undefined);
+	const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 	const router = useRouter();
-	
+
 	// Function to manually set the user role
 	const setUserRole = (newRole: string) => {
 		console.log('Manually setting role to:', newRole);
 		setRole(newRole);
 	};
-	
+
 	// Set isMounted to true once the component mounts in the browser
 	useEffect(() => {
 		setIsMounted(true);
@@ -65,7 +70,7 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
 		} else {
 			console.log('No role found in cookie');
 		}
-		
+
 		const authToken = getCookie('authToken');
 		if (authToken) {
 			setIsAuthenticated(true);
@@ -83,20 +88,24 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
 	// Check if the user is logged in, if not redirect to login page
 	useEffect(() => {
 		if (!isMounted) return; // Skip if not mounted (server-side)
-		
+
 		const unsubscribe = auth.onAuthStateChanged((firebaseUser) => {
 			setIsLoading(true);
 			setUser(firebaseUser);
-			
+
 			if (!firebaseUser) {
 				setIsAuthenticated(false);
 				setIsLoading(false);
 				setRole(null);
-				router.push('/login');
+				// Check if current path is a public route before redirecting
+				const path = window.location.pathname;
+				if (!publicRoutes.some((route) => path === route || path.startsWith(`${route}/`))) {
+					router.push('/login');
+				}
 			} else {
 				// Check for auth token and role immediately
 				checkAuthToken();
-				
+
 				// If we have a Firebase user, start checking for the auth token
 				intervalRef.current = setInterval(checkAuthToken, 500);
 				// If the token is not found after 30 seconds, stop the interval and set loading to false
@@ -108,7 +117,7 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
 				}, 30000);
 			}
 		});
-		
+
 		return () => {
 			unsubscribe();
 			if (intervalRef.current) clearInterval(intervalRef.current);
@@ -119,16 +128,16 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
 	// Update the auth token cookie when the token changes in Firebase
 	useEffect(() => {
 		if (!isMounted) return; // Skip if not mounted (server-side)
-		
+
 		const unsubscribeToken = onIdTokenChanged(auth, async (user) => {
 			if (user) {
 				const token = await user.getIdToken();
 				setCookie('authToken', token, {
 					path: '/',
 					secure: true,
-					sameSite: 'strict'
+					sameSite: 'strict',
 				});
-				
+
 				// Check for role again when token changes
 				const userRole = getCookie('userRole');
 				if (userRole) {
@@ -140,7 +149,7 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
 				deleteCookie('userRole');
 			}
 		});
-		
+
 		return () => {
 			unsubscribeToken();
 		};

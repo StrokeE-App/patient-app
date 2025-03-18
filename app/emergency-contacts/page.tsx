@@ -53,6 +53,8 @@ export default function EmergencyContactsPage() {
 		fetchEmergencyContacts();
 	}, [user]);
 
+	console.log(emergencyContacts);
+
 	if (isLoading) {
 		return (
 			<div className="flex justify-center items-center h-screen">
@@ -81,6 +83,7 @@ export default function EmergencyContactsPage() {
 						name={`${contact.firstName} ${contact.lastName}`}
 						phone={contact.phoneNumber}
 						relationship={contact.relationship}
+						email={contact.email}
 					/>
 				))}
 			</div>

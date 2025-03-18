@@ -3,10 +3,10 @@ import {Settings, X} from 'lucide-react';
 import {useState, useEffect} from 'react';
 import {SignOut} from '@/firebase/config';
 import Link from 'next/link';
-import { useAuth } from '@/context/AuthContext';
+import {useAuth} from '@/context/AuthContext';
 
 export default function SettingsMenu() {
-	const { role } = useAuth();
+	const {role} = useAuth();
 	const [isOpen, setIsOpen] = useState(false);
 
 	// Close panel when pressing Escape key
@@ -30,8 +30,6 @@ export default function SettingsMenu() {
 
 	// Determine greeting based on role
 	const greeting = role === 'emergencyContact' ? 'Contacto de Emergencia' : 'Paciente';
-
-	console.log(role);
 
 	return (
 		<>
@@ -73,7 +71,6 @@ export default function SettingsMenu() {
 								</li>
 							</>
 						)}
-					
 					</ul>
 				</div>
 				{/* Panel Footer with Logout Button */}

@@ -19,6 +19,7 @@ type EmergencyContactCardProps = {
 	phone?: string;
 	relationship?: string;
 	emergencyContactId: number;
+	email?: string;
 };
 
 export default function EmergencyContactCard({
@@ -26,6 +27,7 @@ export default function EmergencyContactCard({
 	phone = '+57 123 456 7890',
 	relationship = 'Padre',
 	emergencyContactId,
+	email = '',
 }: EmergencyContactCardProps) {
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const {user} = useAuth();
@@ -52,10 +54,11 @@ export default function EmergencyContactCard({
 	return (
 		<>
 			<div className="w-[90vw] sm:w-[20vw] min-w-[18rem] flex justify-between items-center mt-4 p-4 bg-customLightGray rounded-lg shadow-sm gap-6">
-				<div>
-					<p>{name}</p>
-					<p className="font-bold">({relationship})</p>
-					<p>{phone}</p>
+				<div className="w-full overflow-hidden">
+					<p className="text-ellipsis overflow-hidden">{name}</p>
+					<p className="font-bold text-ellipsis overflow-hidden">({relationship})</p>
+					<p className="text-ellipsis overflow-hidden">{phone}</p>
+					<p className="text-xs text-ellipsis overflow-hidden">{email}</p>
 				</div>
 				<div className="flex flex-col items-center gap-2">
 					<Link href={`/emergency-contacts/edit/${emergencyContactId}`}>

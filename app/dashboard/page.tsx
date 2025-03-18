@@ -55,10 +55,14 @@ export default function Dashboard() {
 				</div>
 
 				<p className="text-gray-600 mb-6">
-					Reconoce un ACV con la regla <b>BEFAST</b>
+					Reconoce un ACV con la regla <b>RAPIDO</b>
 				</p>
 
-				<ul className='list-disc list-inside mb-8'>
+				<div className="flex justify-center items-center">
+					<Image src="/images/RAPIDO_BLACK.png" alt="Escala RAPIDO para detectar un ACV" width={600} height={300} />
+				</div>
+
+				{/* 				<ul className='list-disc list-inside mb-8'>
 					<li>
 					<b>B</b>alance (Equilibrio): Pérdida repentina del equilibrio o coordinación.
 					</li>
@@ -67,7 +71,7 @@ export default function Dashboard() {
 					<li><b>A</b>rms (Brazos): Dificultad para levantar un brazo o debilidad en un lado del cuerpo.</li>
 					<li><b>S</b>peech (Habla): Dificultad para hablar o comprender el lenguaje.</li>
 					<li><b>T</b>ime (Tiempo): ¡Cada segundo cuenta! Llama a emergencias de inmediato.</li>
-				</ul>
+				</ul> */}
 			</div>
 
 			{/* Footer */}
