@@ -1,11 +1,12 @@
 'use client';
-
 import {Settings, X} from 'lucide-react';
 import {useState, useEffect} from 'react';
 import {SignOut} from '@/firebase/config';
 import Link from 'next/link';
+import {useAuth} from '@/context/AuthContext';
 
 export default function SettingsMenu() {
+	const {role} = useAuth();
 	const [isOpen, setIsOpen] = useState(false);
 
 	// Close panel when pressing Escape key
@@ -15,7 +16,6 @@ export default function SettingsMenu() {
 				setIsOpen(false);
 			}
 		};
-
 		document.addEventListener('keydown', handleEscape);
 		return () => document.removeEventListener('keydown', handleEscape);
 	}, []);
@@ -28,6 +28,9 @@ export default function SettingsMenu() {
 		}
 	};
 
+	// Determine greeting based on role
+	const greeting = role === 'emergencyContact' ? 'Contacto de Emergencia' : 'Paciente';
+
 	return (
 		<>
 			{/* Settings Button */}
@@ -36,12 +39,9 @@ export default function SettingsMenu() {
 				className="flex justify-center items-center w-[4.6rem] h-[4.6rem] text-customRed cursor-pointer z-20 bg-customRed rounded-lg shadow-lg"
 			>
 				<Settings className="w-[3.6rem] h-[3.6rem] text-customWhite bg-customRed" />
-				{/* <span className="text-lg font-medium">Configuración</span> */}
 			</div>
-
 			{/* Overlay */}
 			{isOpen && <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity z-30" onClick={() => setIsOpen(false)} />}
-
 			{/* Side Panel */}
 			<div
 				className={`fixed top-0 left-0 h-full w-3/4 max-w-sm bg-white transform transition-transform duration-300 ease-in-out z-40 ${
@@ -51,29 +51,28 @@ export default function SettingsMenu() {
 				{/* Panel Header */}
 				<div className="relative bg-customRed text-white p-6">
 					<h2 className="text-2xl font-medium">Hola,</h2>
-					<p className="text-2xl font-black">Paciente!</p>
+					<p className="text-2xl font-black">{greeting}!</p>
 					<X onClick={() => setIsOpen(false)} className="absolute top-6 right-6 w-6 h-6 cursor-pointer" />
 				</div>
-
-				{/* Panel Content */}
+				{/* Panel Content - Conditional based on role */}
 				<div className="p-6">
 					<ul className="mt-4 space-y-2">
-						<li>
-							<Link href="/edit-profile">
-								<button className="text-2xl font-medium text-gray-900 p-4 w-full text-start hover:text-customRed">Editar perfil</button>
-							</Link>
-						</li>
-						<li>
-							<Link href={`/emergency-contacts`}>
-								<button className="text-2xl font-medium text-gray-900 p-4 w-full text-start hover:text-customRed">Contactos de emergencia</button>
-							</Link>
-						</li>
-						{/* <li>
-							<button className="text-2xl font-medium text-gray-900 hover:text-customRed">Notificaciones</button>
-						</li> */}
+						{role === 'patient' && (
+							<>
+								<li>
+									<Link href="/edit-profile">
+										<button className="text-2xl font-medium text-gray-900 p-4 w-full text-start hover:text-customRed">Editar perfil</button>
+									</Link>
+								</li>
+								<li>
+									<Link href={`/emergency-contacts`}>
+										<button className="text-2xl font-medium text-gray-900 p-4 w-full text-start hover:text-customRed">Contactos de emergencia</button>
+									</Link>
+								</li>
+							</>
+						)}
 					</ul>
 				</div>
-
 				{/* Panel Footer with Logout Button */}
 				<div className="absolute bottom-0 left-0 right-0 p-6">
 					<button onClick={handleLogOut} className="text-customRed text-lg font-medium hover:text-red-700">

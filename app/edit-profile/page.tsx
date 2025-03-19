@@ -23,6 +23,9 @@ import { convertUTCToLocal, formatDate } from '@/utils/functions';
 // Types
 import {EditPatientData} from '@/types';
 
+// Mocks
+import { conditionsList, medicinesList } from '@/mocks/patientData';
+
 export default function EditProfilePage() {
 	const [isLoading, setIsLoading] = useState(false);
 	const [patient, setPatient] = useState<EditPatientData>({
@@ -133,6 +136,7 @@ export default function EditProfilePage() {
 				patientId: undefined,
 				email: undefined,
 				password: undefined,
+				medicId: undefined,
 			});
 			toast.success('Perfil actualizado.', {id: loadingToast});
 		} catch (error) {
@@ -181,17 +185,19 @@ export default function EditProfilePage() {
 				<Input name="height" placeholder="Estatura (m)" type="number" value={patient.height} withLabel onChange={handleOnChangeData} />
 				<MultiSelectPicker
 					label="Medicamentos"
-					options={['Aspirina', 'Ibuprofeno', 'Paracetamol', 'dolex']}
+					options={medicinesList}
 					selected={patient.medications}
 					onChange={(selected) => setPatient({...patient, medications: selected})}
 					placeholder="Seleccione o escriba para buscar medicamentos..."
+					creatable={true} // Enable creating new options
 				/>
 				<MultiSelectPicker
 					label="Condiciones"
-					options={['Hipertensión', 'Diabetes', 'Asma', 'Gripa', 'Dolor de Cabeza']}
+					options={conditionsList}
 					selected={patient.conditions}
 					onChange={(selected) => setPatient({...patient, conditions: selected})}
 					placeholder="Seleccione o escriba para buscar condiciones..."
+					creatable={true} // Enable creating new options
 				/>
 				<br />
 				<br />
