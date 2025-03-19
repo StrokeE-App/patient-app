@@ -1,7 +1,7 @@
 // Import the functions you need from the SDKs you need
 import {initializeApp} from 'firebase/app';
 import {getAuth, signInWithEmailAndPassword} from 'firebase/auth';
-import { setCookie, deleteCookie } from '@/utils/cookies';
+import {setCookie, deleteCookie} from '@/utils/cookies';
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -56,32 +56,32 @@ export async function SignIn(email: string, password: string) {
 			throw new Error(message);
 		}
 
-		console.log("User role from API:", data.role);
+		console.log('User role from API:', data.role);
 
 		// Store backend token in cookie using the utility function
 		setCookie('authToken', idToken, {
 			path: '/',
-			secure: true,
-			sameSite: 'strict'
+			secure: false,
+			sameSite: 'strict',
 		});
-		
+
 		let userRole = null;
-		
+
 		// Store user role in cookie using the utility function
 		if (data.role) {
 			userRole = data.role;
 			console.log(`Setting userRole cookie: ${data.role}`);
 			setCookie('userRole', data.role, {
 				path: '/',
-				secure: true,
-				sameSite: 'strict'
+				secure: false,
+				sameSite: 'strict',
 			});
-			
+
 			// Double check if cookie was set
 			setTimeout(() => {
-				const cookies = document.cookie.split(';').map(c => c.trim());
+				const cookies = document.cookie.split(';').map((c) => c.trim());
 				console.log('All cookies after login:', cookies);
-				const roleCookie = cookies.find(cookie => cookie.startsWith('userRole='));
+				const roleCookie = cookies.find((cookie) => cookie.startsWith('userRole='));
 				console.log('Role cookie found:', roleCookie);
 			}, 100);
 		} else {
@@ -91,7 +91,7 @@ export async function SignIn(email: string, password: string) {
 		// Return both user and role
 		return {
 			user: userCredential.user,
-			role: userRole
+			role: userRole,
 		};
 	} catch (error) {
 		console.error(error);

@@ -82,16 +82,17 @@ export default function EmergencyPanel() {
 	const handleConfirmEmergency = async () => {
 		if (!selectedPatient || !user) return;
 
+		const loadingToast = toast.loading('Enviando alerta de emergencia...');
 		try {
 			await apiClient.post('/patient/start-emergency', {
 				patientId: selectedPatient.id,
 				role: 'emergencyContact',
 				emergencyContactId: user.uid,
 			});
-			toast.success('Alerta de emergencia enviada.');
+			toast.success('Alerta de emergencia enviada.', {id: loadingToast});
 			setShowConfirmModal(false);
 		} catch (error) {
-			toast.error('Error al enviar la alerta de emergencia.');
+			toast.error('Error al enviar la alerta de emergencia.', {id: loadingToast});
 			console.error(error);
 		}
 	};

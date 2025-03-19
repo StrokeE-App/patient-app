@@ -58,7 +58,7 @@ export default function Dashboard() {
 					Reconoce un ACV con la regla <b>RAPIDO</b>
 				</p>
 
-				<div className="flex justify-center items-center">
+				<div className="flex justify-center items-center pb-2">
 					<Image src="/images/RAPIDO_BLACK.png" alt="Escala RAPIDO para detectar un ACV" width={600} height={300} />
 				</div>
 
