@@ -3,15 +3,15 @@
 import {EmergencyInfo} from '@/types';
 
 export default function EmergencyInfoComponent({
-	emergencyId,
+	// emergencyId,
 	userName,
 	userPhone,
 	userAge,
-	userAddress,
+	// userAddress,
 	userWeight,
 	userHeight,
-	emergencyLocation,
-	strokeLevel = '...',
+	// emergencyLocation,
+	// strokeLevel = '...',
 	emergencyTime,
 }: EmergencyInfo) {
 	const readableString = emergencyTime ? emergencyTime.toLocaleString() : 'Ahorita';
