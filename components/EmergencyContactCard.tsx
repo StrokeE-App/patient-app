@@ -20,6 +20,7 @@ type EmergencyContactCardProps = {
 	relationship?: string;
 	emergencyContactId: number;
 	email?: string;
+	canInvite?: boolean;
 };
 
 export default function EmergencyContactCard({
@@ -28,6 +29,7 @@ export default function EmergencyContactCard({
 	relationship = 'Padre',
 	emergencyContactId,
 	email = '',
+	canInvite = false,
 }: EmergencyContactCardProps) {
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const {user} = useAuth();
@@ -51,6 +53,23 @@ export default function EmergencyContactCard({
 		}
 	};
 
+	const handleInviteContact = async () => {
+		if (!user) return;
+
+		const loadingToast = toast.loading('Enviando invitación al contacto...');
+		try {
+			await apiClient.post('/patient/send-activation-email', {
+				email,
+				patientId: user.uid,
+				emergencyContactId,
+			});
+			toast.success('Invitación enviada correctamente', {id: loadingToast});
+		} catch (error) {
+			toast.error('Error al enviar la invitación', {id: loadingToast});
+			console.error(error);
+		}
+	};
+
 	return (
 		<>
 			<div className="w-[90vw] sm:w-[20vw] min-w-[18rem] flex justify-between items-center mt-4 p-4 bg-customLightGray rounded-lg shadow-sm gap-6">
@@ -59,6 +78,15 @@ export default function EmergencyContactCard({
 					<p className="font-bold text-ellipsis overflow-hidden">({relationship})</p>
 					<p className="text-ellipsis overflow-hidden">{phone}</p>
 					<p className="text-xs text-ellipsis overflow-hidden">{email}</p>
+					{canInvite && (
+						<button
+							onClick={() => handleInviteContact()}
+							className="bg-customGreen text-customBlack px-4 py-1 rounded-lg mt-2 disabled:opacity-50"
+							disabled={!canInvite}
+						>
+							Invitar
+						</button>
+					)}
 				</div>
 				<div className="flex flex-col items-center gap-2">
 					<Link href={`/emergency-contacts/edit/${emergencyContactId}`}>

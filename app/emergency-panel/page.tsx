@@ -17,6 +17,7 @@ import apiClient from '@/api/api';
 
 // Types
 import {Patient, EmergencyContact} from '@/types/emergencyContact';
+import {AxiosError} from 'axios';
 
 export default function EmergencyPanel() {
 	const {role, user} = useAuth();
@@ -24,6 +25,7 @@ export default function EmergencyPanel() {
 	const [showConfirmModal, setShowConfirmModal] = useState(false);
 	const [assignedPatients, setAssignedPatients] = useState<Patient[]>([]);
 	const [filteredPatients, setFilteredPatients] = useState<Patient[]>([]);
+	const [emergencyContactInfo, setEmergencyContactInfo] = useState<EmergencyContact | null>(null);
 	const [searchTerm, setSearchTerm] = useState('');
 	const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
@@ -43,17 +45,27 @@ export default function EmergencyPanel() {
 			try {
 				setIsLoading(true);
 				const response = await apiClient.get<{data: EmergencyContact[]}>(`/emergency-contact/${user.uid}`);
-				const patients = response.data.data.map((contact) => ({
-					id: contact.patientDetails[0].patientId,
-					name: `${contact.patientDetails[0].firstName} ${contact.patientDetails[0].lastName}`,
+				setEmergencyContactInfo(response.data.data[0]);
+				console.log(response.data);
+
+				const patients = response.data.data[0].patientDetails.map((patient) => ({
+					id: patient.patientId,
+					name: `${patient.firstName} ${patient.lastName}`,
 					relationship: 'Paciente', // Since we don't have relationship in the API response
-					conditions: contact.patientDetails[0].conditions,
-					medications: contact.patientDetails[0].medications,
+					conditions: patient.conditions,
+					medications: patient.medications,
+					phoneNumber: patient.phoneNumber,
+					email: patient.email,
 				}));
 				setAssignedPatients(patients);
 				setFilteredPatients(patients);
 				setIsLoading(false);
 			} catch (error) {
+				if (error instanceof AxiosError) {
+					toast.error(error.response?.data.message);
+				} else {
+					toast.error('Error al obtener los pacientes asignados.');
+				}
 				console.error('Error fetching assigned patients:', error);
 				setIsLoading(false);
 			}
@@ -87,12 +99,16 @@ export default function EmergencyPanel() {
 			await apiClient.post('/patient/start-emergency', {
 				patientId: selectedPatient.id,
 				role: 'emergencyContact',
-				emergencyContactId: user.uid,
+				phoneNumber: emergencyContactInfo?.phoneNumber,
 			});
 			toast.success('Alerta de emergencia enviada.', {id: loadingToast});
 			setShowConfirmModal(false);
 		} catch (error) {
-			toast.error('Error al enviar la alerta de emergencia.', {id: loadingToast});
+			if (error instanceof AxiosError) {
+				toast.error(error.response?.data.message, {id: loadingToast});
+			} else {
+				toast.error('Error al enviar la alerta de emergencia.', {id: loadingToast});
+			}
 			console.error(error);
 		}
 	};
@@ -148,6 +164,9 @@ export default function EmergencyPanel() {
 										<h3 className="font-medium">{patient.name}</h3>
 										<p className="text-sm text-gray-500">Condiciones: {patient.conditions.join(', ')}</p>
 										<p className="text-sm text-gray-500">Medicamentos: {patient.medications.join(', ')}</p>
+										<p className="text-sm text-gray-500">Teléfono: {patient.phoneNumber}</p>
+										<p className="text-sm text-gray-500">Email: {patient.email}</p>
+									
 									</div>
 									<div
 										onClick={() => handleEmergencyActivation(patient)}
