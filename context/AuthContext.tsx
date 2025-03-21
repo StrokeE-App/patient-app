@@ -3,12 +3,16 @@ import {createContext, useContext, useEffect, useState, useRef} from 'react';
 import {auth} from '@/firebase/config';
 import {onIdTokenChanged, User} from 'firebase/auth';
 import {useRouter} from 'next/navigation';
+import apiClient from '@/api/api';
 
 // Utils
 import {getCookie, setCookie, deleteCookie} from '@/utils/cookies';
 
 // Config
 import {publicRoutes} from '@/config/routes';
+
+// Types
+import {MongoDBUserData} from '@/types';
 
 interface AuthContextType {
 	user: User | null;
@@ -17,6 +21,7 @@ interface AuthContextType {
 	checkAuthToken: () => void;
 	role: string | null;
 	setUserRole: (role: string) => void;
+	mongoUser: MongoDBUserData | null;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -26,6 +31,7 @@ const AuthContext = createContext<AuthContextType>({
 	checkAuthToken: () => {},
 	role: null,
 	setUserRole: () => {},
+	mongoUser: null,
 });
 
 export function AuthProvider({children}: {children: React.ReactNode}) {
@@ -34,6 +40,7 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
 	const [isLoading, setIsLoading] = useState(true);
 	const [isMounted, setIsMounted] = useState(false);
 	const [role, setRole] = useState<string | null>(null);
+	const [mongoUser, setMongoUser] = useState<MongoDBUserData | null>(null);
 	const intervalRef = useRef<NodeJS.Timeout | undefined>(undefined);
 	const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 	const router = useRouter();
@@ -42,6 +49,22 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
 	const setUserRole = (newRole: string) => {
 		console.log('Manually setting role to:', newRole);
 		setRole(newRole);
+	};
+
+	// Function to fetch MongoDB user data
+	const fetchMongoUserData = async (userId: string) => {
+		try {
+			const response = await apiClient.get(`/patient/${userId}`);
+			const userData = response.data.data;
+			setMongoUser(userData);
+		} catch (error) {
+			console.error('Error fetching MongoDB user data:', error);
+		}
+	};
+
+	// Function to clear MongoDB user data
+	const clearMongoUserData = () => {
+		setMongoUser(null);
 	};
 
 	// Set isMounted to true once the component mounts in the browser
@@ -71,6 +94,7 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
 			console.log('No role found in cookie');
 		}
 
+		// Check for auth token in cookie
 		const authToken = getCookie('authToken');
 		if (authToken) {
 			setIsAuthenticated(true);
@@ -89,7 +113,7 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
 	useEffect(() => {
 		if (!isMounted) return; // Skip if not mounted (server-side)
 
-		const unsubscribe = auth.onAuthStateChanged((firebaseUser) => {
+		const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
 			setIsLoading(true);
 			setUser(firebaseUser);
 
@@ -97,6 +121,7 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
 				setIsAuthenticated(false);
 				setIsLoading(false);
 				setRole(null);
+				clearMongoUserData();
 				// Check if current path is a public route before redirecting
 				const path = window.location.pathname;
 				if (!publicRoutes.some((route) => path === route || path.startsWith(`${route}/`))) {
@@ -105,6 +130,23 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
 			} else {
 				// Check for auth token and role immediately
 				checkAuthToken();
+
+				// Wait for the auth token to be ready before fetching MongoDB data
+				const waitForAuthToken = async () => {
+					try {
+						const token = await firebaseUser.getIdToken();
+						if (token) {
+							// Only fetch MongoDB data if role is patient
+							if (role === 'patient') {
+								await fetchMongoUserData(firebaseUser.uid);
+							}
+						}
+					} catch (error) {
+						console.error('Error getting auth token:', error);
+					}
+				};
+
+				waitForAuthToken();
 
 				// If we have a Firebase user, start checking for the auth token
 				intervalRef.current = setInterval(checkAuthToken, 500);
@@ -123,7 +165,7 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
 			if (intervalRef.current) clearInterval(intervalRef.current);
 			if (timeoutRef.current) clearTimeout(timeoutRef.current);
 		};
-	}, [router, isMounted]);
+	}, [router, isMounted, role]);
 
 	// Update the auth token cookie when the token changes in Firebase
 	useEffect(() => {
@@ -143,10 +185,15 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
 				if (userRole) {
 					console.log('Role after token change:', userRole);
 					setRole(userRole);
+					// Only fetch MongoDB data if role is patient
+					if (userRole === 'patient') {
+						await fetchMongoUserData(user.uid);
+					}
 				}
 			} else {
 				deleteCookie('authToken');
 				deleteCookie('userRole');
+				clearMongoUserData();
 			}
 		});
 
@@ -160,7 +207,9 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
 		console.log('Current role in context:', role);
 	}, [role]);
 
-	return <AuthContext.Provider value={{user, isAuthenticated, isLoading, checkAuthToken, role, setUserRole}}>{children}</AuthContext.Provider>;
+	return (
+		<AuthContext.Provider value={{user, isAuthenticated, isLoading, checkAuthToken, role, setUserRole, mongoUser}}>{children}</AuthContext.Provider>
+	);
 }
 
 export const useAuth = () => useContext(AuthContext);

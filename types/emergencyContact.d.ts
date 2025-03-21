@@ -23,4 +23,6 @@ export interface Patient {
 	relationship: string;
 	conditions: string[];
 	medications: string[];
+	phoneNumber: string;
+	email: string;
 }

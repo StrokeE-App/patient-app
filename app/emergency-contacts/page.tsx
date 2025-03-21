@@ -84,6 +84,7 @@ export default function EmergencyContactsPage() {
 						phone={contact.phoneNumber}
 						relationship={contact.relationship}
 						email={contact.email}
+						canInvite={!contact.canActivateEmergency}
 					/>
 				))}
 			</div>

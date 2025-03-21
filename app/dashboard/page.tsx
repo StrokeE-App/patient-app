@@ -1,15 +1,24 @@
 'use client';
 
 import {useEffect} from 'react';
-import SettingsMenu from '@/components/SettingsMenu';
 import Image from 'next/image';
-import {StrokeeLogo} from '@/components/StrokeeLogo';
-import apiClient from '@/api/api';
 import toast from 'react-hot-toast';
+
+// Components
+import SettingsMenu from '@/components/SettingsMenu';
+import {StrokeeLogo} from '@/components/StrokeeLogo';
+
+// API
+import apiClient from '@/api/api';
+
+// Context
 import {useAuth} from '@/context/AuthContext';
 
+// Types
+import {AxiosError} from 'axios';
+
 export default function Dashboard() {
-	const {user} = useAuth();
+	const {user, mongoUser, isLoading} = useAuth();
 
 	useEffect(() => {
 		const setVh = () => {
@@ -22,23 +31,42 @@ export default function Dashboard() {
 	}, []);
 
 	const handleStartEmergency = async () => {
-		if (!user) return;
+		if (!user || !mongoUser) return;
 
 		const loadingToast = toast.loading('Enviando alerta de emergencia...');
 		try {
 			await apiClient.post('/patient/start-emergency', {
 				patientId: user.uid,
 				role: 'patient',
+				phoneNumber: mongoUser.phoneNumber,
 			});
 			toast.success('Alerta de emergencia enviada.', {id: loadingToast});
 		} catch (error) {
-			toast.error('Error al enviar la alerta de emergencia.', {id: loadingToast});
+			if (error instanceof AxiosError) {
+				toast.error(error.response?.data.message, {id: loadingToast});
+			} else {
+				toast.error('Error al enviar la alerta de emergencia.', {id: loadingToast});
+			}
 			console.log(error);
 		}
 	};
 
+	// Show loading state while checking authentication
+	if (isLoading) {
+		return (
+			<div className="min-h-screen flex items-center justify-center">
+				<div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-customRed"></div>
+			</div>
+		);
+	}
+
+	// Don't render anything if not authenticated or no MongoDB user data
+	if (!user || !mongoUser) {
+		return null;
+	}
+
 	return (
-		<main style={{minHeight: 'calc(var(--vh, 1vh) * 100)'}} className=" p-4 flex flex-col justify-between">
+		<main style={{minHeight: 'calc(var(--vh, 1vh) * 100)'}} className="p-4 flex flex-col justify-between">
 			{/* Header */}
 			<SettingsMenu />
 

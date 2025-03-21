@@ -18,6 +18,7 @@ export type EmergencyContact = {
 	phoneNumber: string;
 	relationship: string;
 	emergencyContactId: number;
+	canActivateEmergency: boolean;
 };
 
 export type EditPatientData = {
@@ -31,3 +32,17 @@ export type EditPatientData = {
 	medications: string[];
 	conditions: string[];
 };
+
+export interface MongoDBUserData {
+	patientId: string;
+	firstName: string;
+	lastName: string;
+	email: string;
+	phoneNumber: string;
+	age: number;
+	birthDate: string;
+	weight: number;
+	height: number;
+	medications: string[];
+	conditions: string[];
+}
