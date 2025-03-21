@@ -60,11 +60,6 @@ export default function Dashboard() {
 		);
 	}
 
-	// Don't render anything if not authenticated or no MongoDB user data
-	if (!user || !mongoUser) {
-		return null;
-	}
-
 	return (
 		<main style={{minHeight: 'calc(var(--vh, 1vh) * 100)'}} className="p-4 flex flex-col justify-between">
 			{/* Header */}
