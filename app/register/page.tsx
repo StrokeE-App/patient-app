@@ -11,6 +11,7 @@ import Input from '@/components/Input';
 import DatePicker from '@/components/DatePicker';
 import MultiSelectPicker from '@/components/MultiSelectPicker';
 import {StrokeeLogo} from '@/components/StrokeeLogo';
+import DataProtectionAgreement from '@/components/DataProtectionAgreement';
 
 // API
 import apiClient from '@/api/api';
@@ -29,6 +30,8 @@ import {useAuth} from '@/context/AuthContext';
 export default function RegisterPage() {
 	const router = useRouter();
 	const {isAuthenticated, isLoading: isLoadingAuth, role} = useAuth();
+	const [showAgreement, setShowAgreement] = useState(false);
+	const [agreementAccepted, setAgreementAccepted] = useState(false);
 
 	// Redirect to dashboard or emergency panel if user is authenticated
 	useEffect(() => {
@@ -118,6 +121,12 @@ export default function RegisterPage() {
 	// Register patient
 	const handleRegister = async (e: React.FormEvent) => {
 		e.preventDefault();
+
+		// Check if agreement is accepted
+		if (!agreementAccepted) {
+			setShowAgreement(true);
+			return;
+		}
 
 		// Format date to DD/MM/AAAA
 		const birthDate = formatDate(new Date(patient.birthDate));
@@ -227,8 +236,14 @@ export default function RegisterPage() {
 		}
 	};
 
+	const handleAgreementAccept = () => {
+		setAgreementAccepted(true);
+		setShowAgreement(false);
+	};
+
 	return (
 		<main className="flex min-h-screen flex-col items-center p-6 pb-20">
+			<DataProtectionAgreement isOpen={showAgreement} onClose={() => setShowAgreement(false)} onAccept={handleAgreementAccept} />
 			<div className="w-full max-w-md">
 				<div className="flex justify-center my-6">
 					<StrokeeLogo />
@@ -344,12 +359,22 @@ export default function RegisterPage() {
 							maxLength={6}
 						/>
 						<p className="text-xs text-gray-500 pl-2 -mt-2">Ingrese el código de verificación proporcionado en el correo.</p>
+
+						<div className="flex items-start space-x-3 mt-4">
+							<input type="checkbox" id="agreement" checked={agreementAccepted} onChange={(e) => setAgreementAccepted(e.target.checked)} className="mt-1" />
+							<label htmlFor="agreement" className="text-sm text-gray-600">
+								He leído y acepto el{' '}
+								<button type="button" onClick={() => setShowAgreement(true)} className="text-customRed hover:underline">
+									acuerdo de protección de datos personales
+								</button>
+							</label>
+						</div>
 					</div>
 
 					<div className="flex flex-col items-center gap-4 mt-8">
 						<button
 							type="submit"
-							disabled={isLoading}
+							disabled={isLoading || !agreementAccepted}
 							className="w-full bg-customRed text-white px-8 py-3 rounded-full shadow-lg focus:outline-none focus:ring-2 focus:ring-customRed focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
 						>
 							{isLoading ? 'Creando cuenta...' : 'Crear Cuenta'}
