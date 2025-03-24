@@ -1,8 +1,12 @@
 // Helper function to format date to DD/MM/AAAA
 export function formatDate(date: Date): string {
-	const day = (date.getDate() + 1).toString().padStart(2, '0');
-	const month = (date.getMonth() + 1).toString().padStart(2, '0');
-	const year = date.getFullYear();
+	// Add 1 day to the date
+	const newDate = new Date(date.getTime() + 24 * 60 * 60 * 1000);
+
+	const day = newDate.getDate().toString().padStart(2, '0');
+	const month = (newDate.getMonth() + 1).toString().padStart(2, '0');
+	const year = newDate.getFullYear();
+
 	return `${year}-${month}-${day}`;
 }
 
