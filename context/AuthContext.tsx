@@ -151,7 +151,7 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
 				checkAuthToken();
 
 				// Wait for the auth token to be ready before restoring user state
-				const waitForAuthToken = async () => {
+				/* 				const waitForAuthToken = async () => {
 					try {
 						const token = await firebaseUser.getIdToken();
 						if (token) {
@@ -177,7 +177,7 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
 					}
 				};
 
-				waitForAuthToken();
+				waitForAuthToken(); */
 
 				// If we have a Firebase user, start checking for the auth token
 				intervalRef.current = setInterval(checkAuthToken, 500);
