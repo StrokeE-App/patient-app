@@ -18,7 +18,7 @@ import {useAuth} from '@/context/AuthContext';
 import {AxiosError} from 'axios';
 
 export default function Dashboard() {
-	const {user, mongoUser, isLoading} = useAuth();
+	const {user, isLoading} = useAuth();
 
 	useEffect(() => {
 		const setVh = () => {
@@ -31,14 +31,14 @@ export default function Dashboard() {
 	}, []);
 
 	const handleStartEmergency = async () => {
-		if (!user || !mongoUser) return;
+		if (!user) return;
 
 		const loadingToast = toast.loading('Enviando alerta de emergencia...');
 		try {
 			await apiClient.post('/patient/start-emergency', {
 				patientId: user.uid,
 				role: 'patient',
-				phoneNumber: mongoUser.phoneNumber,
+				// phoneNumber: mongoUser.phoneNumber,
 			});
 			toast.success('Alerta de emergencia enviada.', {id: loadingToast});
 		} catch (error) {
