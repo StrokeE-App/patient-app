@@ -44,11 +44,12 @@ export default function EmergencyPanel() {
 
 			try {
 				setIsLoading(true);
-				const response = await apiClient.get<{data: EmergencyContact[]}>(`/emergency-contact/${user.uid}`);
-				setEmergencyContactInfo(response.data.data[0]);
-				console.log(response.data);
+				const response = await apiClient.get<{data: {data: EmergencyContact}}>(`/emergency-contact/${user.uid}`);
+				const emergencyContact = response.data.data.data;
+				console.log('MY EMERGENCY CONTACT: ', emergencyContact);
+				setEmergencyContactInfo(emergencyContact);
 
-				const patients = response.data.data[0].patientDetails.map((patient) => ({
+				const patients = emergencyContact.patientDetails.map((patient) => ({
 					id: patient.patientId,
 					name: `${patient.firstName} ${patient.lastName}`,
 					relationship: 'Paciente', // Since we don't have relationship in the API response
@@ -166,7 +167,6 @@ export default function EmergencyPanel() {
 										<p className="text-sm text-gray-500">Medicamentos: {patient.medications.join(', ')}</p>
 										<p className="text-sm text-gray-500">Teléfono: {patient.phoneNumber}</p>
 										<p className="text-sm text-gray-500">Email: {patient.email}</p>
-									
 									</div>
 									<div
 										onClick={() => handleEmergencyActivation(patient)}

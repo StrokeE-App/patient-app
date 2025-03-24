@@ -11,9 +11,6 @@ import {getCookie, setCookie, deleteCookie} from '@/utils/cookies';
 // Config
 import {publicRoutes} from '@/config/routes';
 
-// Types
-import {MongoDBUserData} from '@/types';
-
 interface AuthContextType {
 	user: User | null;
 	isAuthenticated: boolean;
@@ -21,7 +18,6 @@ interface AuthContextType {
 	checkAuthToken: () => void;
 	role: string | null;
 	setUserRole: (role: string) => void;
-	mongoUser: MongoDBUserData | null;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -31,8 +27,29 @@ const AuthContext = createContext<AuthContextType>({
 	checkAuthToken: () => {},
 	role: null,
 	setUserRole: () => {},
-	mongoUser: null,
 });
+
+// Utility functions for storing and retrieving user role from localStorage
+const STORAGE_KEYS = {
+	ROLE: 'strokee_role',
+};
+
+const persistToStorage = (key: string, data: string) => {
+	try {
+		localStorage.setItem(key, data);
+	} catch (error) {
+		console.error('Error persisting data to storage:', error);
+	}
+};
+
+const getFromStorage = (key: string): string | null => {
+	try {
+		return localStorage.getItem(key);
+	} catch (error) {
+		console.error('Error reading from storage:', error);
+		return null;
+	}
+};
 
 export function AuthProvider({children}: {children: React.ReactNode}) {
 	const [user, setUser] = useState<User | null>(null);
@@ -40,49 +57,50 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
 	const [isLoading, setIsLoading] = useState(true);
 	const [isMounted, setIsMounted] = useState(false);
 	const [role, setRole] = useState<string | null>(null);
-	const [mongoUser, setMongoUser] = useState<MongoDBUserData | null>(null);
 	const intervalRef = useRef<NodeJS.Timeout | undefined>(undefined);
 	const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 	const router = useRouter();
 
-	// Function to manually set the user role
+	// Modified setUserRole to persist to both cookie and localStorage
 	const setUserRole = (newRole: string) => {
-		console.log('Manually setting role to:', newRole);
+		console.log('Setting role to:', newRole);
 		setRole(newRole);
+		setCookie('userRole', newRole, {
+			path: '/',
+			secure: true,
+			sameSite: 'strict',
+		});
+		persistToStorage(STORAGE_KEYS.ROLE, newRole);
 	};
 
-	// Function to fetch MongoDB user data
-	const fetchMongoUserData = async (userId: string) => {
-		try {
-			const response = await apiClient.get(`/patient/${userId}`);
-			const userData = response.data.data;
-			setMongoUser(userData);
-		} catch (error) {
-			console.error('Error fetching MongoDB user data:', error);
+	// Function to restore user state from storage
+	const restoreUserState = () => {
+		const storedRole = getFromStorage(STORAGE_KEYS.ROLE);
+
+		if (storedRole) {
+			setRole(storedRole);
+			setCookie('userRole', storedRole, {
+				path: '/',
+				secure: true,
+				sameSite: 'strict',
+			});
 		}
-	};
 
-	// Function to clear MongoDB user data
-	const clearMongoUserData = () => {
-		setMongoUser(null);
+		return {storedRole};
 	};
 
 	// Set isMounted to true once the component mounts in the browser
 	useEffect(() => {
 		setIsMounted(true);
-		// Immediately check for role and auth token on client-side mount
+		// Immediately check for role on client-side mount
 		if (typeof window !== 'undefined') {
-			const userRole = getCookie('userRole');
-			if (userRole) {
-				console.log('Initial role check:', userRole);
-				setRole(userRole);
-			}
+			restoreUserState();
 		}
 		return () => setIsMounted(false);
 	}, []);
 
 	// Check if the auth token is present in the cookie and set the state accordingly
-	const checkAuthToken = () => {
+	/* 	const checkAuthToken = () => {
 		if (!isMounted) return; // Skip if not mounted (server-side)
 
 		// Check for user role in cookie
@@ -107,7 +125,7 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
 				clearTimeout(timeoutRef.current);
 			}
 		}
-	};
+	}; */
 
 	// Check if the user is logged in, if not redirect to login page
 	useEffect(() => {
@@ -121,7 +139,8 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
 				setIsAuthenticated(false);
 				setIsLoading(false);
 				setRole(null);
-				clearMongoUserData();
+				localStorage.removeItem(STORAGE_KEYS.ROLE);
+
 				// Check if current path is a public route before redirecting
 				const path = window.location.pathname;
 				if (!publicRoutes.some((route) => path === route || path.startsWith(`${route}/`))) {
@@ -131,22 +150,34 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
 				// Check for auth token and role immediately
 				checkAuthToken();
 
-				// Wait for the auth token to be ready before fetching MongoDB data
-				const waitForAuthToken = async () => {
+				// Wait for the auth token to be ready before restoring user state
+				/* 				const waitForAuthToken = async () => {
 					try {
 						const token = await firebaseUser.getIdToken();
 						if (token) {
-							// Only fetch MongoDB data if role is patient
-							if (role === 'patient') {
-								await fetchMongoUserData(firebaseUser.uid);
+							// First try to restore from storage
+							const {storedRole} = restoreUserState();
+
+							// If we don't have a role, try to determine it
+							if (!storedRole && !role) {
+								try {
+									// Try to fetch patient data to determine role
+									await apiClient.get(`/patient/${firebaseUser.uid}`);
+									setUserRole('patient');
+								} catch {
+									// If patient fetch fails, assume emergency contact
+									setUserRole('emergencyContact');
+								}
 							}
 						}
 					} catch (error) {
 						console.error('Error getting auth token:', error);
+					} finally {
+						setIsLoading(false);
 					}
 				};
 
-				waitForAuthToken();
+				waitForAuthToken(); */
 
 				// If we have a Firebase user, start checking for the auth token
 				intervalRef.current = setInterval(checkAuthToken, 500);
@@ -165,7 +196,7 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
 			if (intervalRef.current) clearInterval(intervalRef.current);
 			if (timeoutRef.current) clearTimeout(timeoutRef.current);
 		};
-	}, [router, isMounted, role]);
+	}, [router, isMounted]);
 
 	// Update the auth token cookie when the token changes in Firebase
 	useEffect(() => {
@@ -185,15 +216,12 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
 				if (userRole) {
 					console.log('Role after token change:', userRole);
 					setRole(userRole);
-					// Only fetch MongoDB data if role is patient
-					if (userRole === 'patient') {
-						await fetchMongoUserData(user.uid);
-					}
 				}
 			} else {
 				deleteCookie('authToken');
 				deleteCookie('userRole');
-				clearMongoUserData();
+				localStorage.removeItem(STORAGE_KEYS.ROLE);
+				setRole(null);
 			}
 		});
 
@@ -202,14 +230,39 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
 		};
 	}, [isMounted]);
 
+	// Check if the auth token is present in the cookie and set the state accordingly
+	const checkAuthToken = () => {
+		if (!isMounted) return;
+
+		// Check for user role in cookie
+		const userRole = getCookie('userRole');
+		if (userRole) {
+			console.log('Role from cookie:', userRole);
+			setRole(userRole);
+		} else {
+			console.log('No role found in cookie');
+		}
+
+		// Check for auth token in cookie
+		const authToken = getCookie('authToken');
+		if (authToken) {
+			setIsAuthenticated(true);
+			setIsLoading(false);
+			if (intervalRef.current) {
+				clearInterval(intervalRef.current);
+			}
+			if (timeoutRef.current) {
+				clearTimeout(timeoutRef.current);
+			}
+		}
+	};
+
 	// Debug log when role changes
 	useEffect(() => {
 		console.log('Current role in context:', role);
 	}, [role]);
 
-	return (
-		<AuthContext.Provider value={{user, isAuthenticated, isLoading, checkAuthToken, role, setUserRole, mongoUser}}>{children}</AuthContext.Provider>
-	);
+	return <AuthContext.Provider value={{user, isAuthenticated, isLoading, checkAuthToken, role, setUserRole}}>{children}</AuthContext.Provider>;
 }
 
 export const useAuth = () => useContext(AuthContext);

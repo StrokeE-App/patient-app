@@ -210,6 +210,8 @@ export default function RegisterPage() {
 				password: credentials.password,
 				token: verificationCode,
 				emergencyContact: [],
+				termsAndConditions: true,
+				registerDate: new Date().toISOString(),
 			});
 
 			// Successful registration
