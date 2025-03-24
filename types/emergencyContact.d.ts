@@ -6,6 +6,7 @@ export interface PatientDetails {
 	phoneNumber: string;
 	conditions: string[];
 	medications: string[];
+	emergencyContactId: string;
 }
 
 export interface EmergencyContact {
@@ -25,4 +26,5 @@ export interface Patient {
 	medications: string[];
 	phoneNumber: string;
 	email: string;
+	emergencyContactId: string;
 }
