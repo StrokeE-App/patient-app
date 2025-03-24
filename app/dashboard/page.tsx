@@ -3,6 +3,7 @@
 import {useEffect} from 'react';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
+import {useRouter} from 'next/navigation';
 
 // Components
 import SettingsMenu from '@/components/SettingsMenu';
@@ -18,7 +19,8 @@ import {useAuth} from '@/context/AuthContext';
 import {AxiosError} from 'axios';
 
 export default function Dashboard() {
-	const {user, isLoading} = useAuth();
+	const {user, isLoading, role} = useAuth();
+	const router = useRouter();
 
 	useEffect(() => {
 		const setVh = () => {
@@ -50,6 +52,13 @@ export default function Dashboard() {
 			console.log(error);
 		}
 	};
+
+	// Redirect to emergency panel if user has a role of 'emergencyContact'
+	useEffect(() => {
+		if (role === 'emergencyContact') {
+			router.push('/emergency-panel');
+		}
+	}, [role, router]);
 
 	// Show loading state while checking authentication
 	if (isLoading) {
