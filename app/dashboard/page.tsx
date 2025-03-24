@@ -55,7 +55,7 @@ export default function Dashboard() {
 	if (isLoading) {
 		return (
 			<div className="min-h-screen flex items-center justify-center">
-				<div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-customRed"></div>
+				<div role="status" className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-customRed"></div>
 			</div>
 		);
 	}
@@ -71,6 +71,7 @@ export default function Dashboard() {
 
 				{/* Panic Button */}
 				<div
+					data-testid="panic-button"
 					onClick={handleStartEmergency}
 					className="mb-8 relative flex justify-center items-center hover:scale-105 transition-transform duration-300 ease-out cursor-pointer"
 				>

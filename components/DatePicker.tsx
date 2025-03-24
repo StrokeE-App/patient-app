@@ -18,14 +18,7 @@ type DatePickerProps = {
 	required?: boolean;
 };
 
-export default function DatePicker({
-	selected, 
-	onChange, 
-	name, 
-	withLabel = false, 
-	label = '',
-	required = false
-}: DatePickerProps) {
+export default function DatePicker({selected, onChange, name, withLabel = false, label = '', required = false}: DatePickerProps) {
 	return (
 		<div className="w-full max-w-[40rem]">
 			{withLabel && label && (
@@ -34,6 +27,7 @@ export default function DatePicker({
 				</div>
 			)}
 			<ReactDatePicker
+				placeholderText={label}
 				selected={selected}
 				onChange={onChange}
 				name={name}
