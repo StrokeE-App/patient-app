@@ -18,13 +18,13 @@ import {useAuth} from '@/context/AuthContext';
 
 // Utils
 import {isValidEmail, isValidPhoneNumber} from '@/utils/validations';
-import { convertUTCToLocal, formatDate } from '@/utils/functions';
+import {convertUTCToLocal, formatDate} from '@/utils/functions';
 
 // Types
 import {EditPatientData} from '@/types';
 
 // Mocks
-import { conditionsList, medicinesList } from '@/mocks/patientData';
+import {conditionsList, medicinesList} from '@/mocks/patientData';
 
 export default function EditProfilePage() {
 	const [isLoading, setIsLoading] = useState(false);
@@ -137,6 +137,8 @@ export default function EditProfilePage() {
 				email: undefined,
 				password: undefined,
 				medicId: undefined,
+				registerDate: undefined,
+				termsAndConditions: undefined,
 			});
 			toast.success('Perfil actualizado.', {id: loadingToast});
 		} catch (error) {
