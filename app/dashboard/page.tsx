@@ -1,6 +1,6 @@
 'use client';
 
-import {useEffect} from 'react';
+import {useEffect, useState} from 'react';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
 import {useRouter} from 'next/navigation';
@@ -21,6 +21,7 @@ import {AxiosError} from 'axios';
 export default function Dashboard() {
 	const {user, isLoading, role} = useAuth();
 	const router = useRouter();
+	const [location, setLocation] = useState<{latitude: number; longitude: number} | null>(null);
 
 	useEffect(() => {
 		const setVh = () => {
@@ -32,6 +33,45 @@ export default function Dashboard() {
 		return () => window.removeEventListener('resize', setVh);
 	}, []);
 
+	// Request geolocation permission when patient enters dashboard
+	useEffect(() => {
+		if (role === 'patient' && 'geolocation' in navigator) {
+			navigator.geolocation.getCurrentPosition(
+				(position) => {
+					setLocation({
+						latitude: position.coords.latitude,
+						longitude: position.coords.longitude,
+					});
+				},
+				(error) => {
+					console.error('Error getting location:', error);
+					let errorMessage = 'No se pudo obtener tu ubicación. ';
+
+					switch (error.code) {
+						case error.PERMISSION_DENIED:
+							errorMessage += 'Por favor, permite el acceso a la ubicación en la configuración de tu navegador.';
+							break;
+						case error.POSITION_UNAVAILABLE:
+							errorMessage += 'La información de ubicación no está disponible. Por favor, verifica que tu GPS esté activado.';
+							break;
+						case error.TIMEOUT:
+							errorMessage += 'La solicitud de ubicación ha expirado. Por favor, intenta de nuevo.';
+							break;
+						default:
+							errorMessage += 'Ha ocurrido un error inesperado.';
+					}
+
+					toast.error(errorMessage);
+				},
+				{
+					enableHighAccuracy: true,
+					timeout: 10000, // Increased timeout to 10 seconds
+					maximumAge: 0,
+				}
+			);
+		}
+	}, [role]);
+
 	const handleStartEmergency = async () => {
 		if (!user) return;
 
@@ -40,7 +80,8 @@ export default function Dashboard() {
 			await apiClient.post('/patient/start-emergency', {
 				patientId: user.uid,
 				role: 'patient',
-				// phoneNumber: mongoUser.phoneNumber,
+				latitude: location?.latitude || undefined,
+				longitude: location?.longitude || undefined,
 			});
 			toast.success('Alerta de emergencia enviada.', {id: loadingToast});
 		} catch (error) {
